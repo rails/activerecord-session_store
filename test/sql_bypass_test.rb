@@ -3,7 +3,7 @@ require 'action_dispatch'
 require 'active_record/session_store'
 
 module ActiveRecord
-  class SessionStore
+  module SessionStore
     class SqlBypassTest < ActiveSupport::TestCase
       def setup
         super

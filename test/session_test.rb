@@ -3,7 +3,7 @@ require 'action_dispatch'
 require 'active_record/session_store'
 
 module ActiveRecord
-  class SessionStore
+  module SessionStore
     class SessionTest < ActiveSupport::TestCase
 
       attr_reader :session_klass
