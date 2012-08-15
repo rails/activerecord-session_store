@@ -1,7 +1,7 @@
 require 'helper'
 require 'rails/generators/test_case'
 require 'active_record/session_store'
-require 'generators/session_migration_generator'
+require 'generators/active_record/session_migration_generator'
 
 class SessionMigrationGeneratorTest < Rails::Generators::TestCase
   tests ActiveRecord::Generators::SessionMigrationGenerator
