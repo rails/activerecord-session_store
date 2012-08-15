@@ -30,5 +30,7 @@ end
 
 require 'active_record/session_store/session'
 require 'active_record/session_store/sql_bypass'
+require 'active_record/session_store/railtie' if defined?(Rails)
+
 
 ActionDispatch::Session::ActiveRecordStore.session_class = ActiveRecord::SessionStore::Session
