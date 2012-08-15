@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency('activerecord', '~> 4.0.0.beta')
   s.add_dependency('actionpack', '~> 4.0.0.beta')
+  s.add_dependency('railties', '~> 4.0.0.beta')
 
   s.add_development_dependency('sqlite3')
 end

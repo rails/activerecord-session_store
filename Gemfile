@@ -3,9 +3,17 @@ source :rubygems
 gemspec
 
 if ENV['RAILS']
-  gem 'rails', path: ENV['RAILS']
+  path ENV['RAILS'] do
+    gem 'actionpack'
+    gem 'activerecord'
+    gem 'railties'
+  end
 else
-  gem 'rails', github: 'rails/rails'
+  git 'git://github.com/rails/rails.git' do
+    gem 'actionpack'
+    gem 'activerecord'
+    gem 'railties'
+  end
 end
 
 gem 'journey', github: 'rails/journey'
