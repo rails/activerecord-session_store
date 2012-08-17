@@ -5,6 +5,24 @@ A session store backed by an Active Record class. A default class is
 provided, but any object duck-typing to an Active Record Session class
 with text `session_id` and `data` attributes is sufficient.
 
+Installation
+------------
+
+Include this gem into your Gemfile:
+
+    gem 'activerecord-session_store', github: 'rails/activerecord-session_store'
+
+Run the migration generator:
+
+    rails generate active_record:session_migration
+
+Then, set your session store in `config/initializers/session_store.rb`:
+
+    Foo::Application.config.session_store :active_record_store
+
+Configuration
+--------------
+
 The default assumes a `sessions` tables with columns:
 
 *  `id` (numeric primary key),
