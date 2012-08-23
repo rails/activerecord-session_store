@@ -1,5 +1,4 @@
 require 'helper'
-require 'action_dispatch'
 require 'active_record/session_store'
 
 module ActiveRecord
@@ -39,6 +38,10 @@ module ActiveRecord
       end
 
       def test_find_by_sess_id_compat
+        # Force class reload, as we need to redo the meta-programming
+        ActiveRecord::SessionStore.send(:remove_const, :Session)
+        load 'active_record/session_store/session.rb'
+
         Session.reset_column_information
         klass = Class.new(Session) do
           def self.session_id_column
