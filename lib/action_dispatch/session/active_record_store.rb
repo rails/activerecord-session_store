@@ -38,7 +38,7 @@ module ActionDispatch
     # feature-packed Active Record or a bare-metal high-performance SQL
     # store, by setting
     #
-    #   ActiveRecord::SessionStore.session_class = MySessionClass
+    #   ActionDispatch::Session::ActiveRecordStore.session_class = MySessionClass
     #
     # You must implement these methods:
     #
