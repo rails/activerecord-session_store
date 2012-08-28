@@ -11,11 +11,11 @@ Gem::Specification.new do |s|
   s.email       = 'david@loudthinking.com'
   s.homepage    = 'http://www.rubyonrails.org'
 
-  s.files        = Dir['CHANGELOG.md', 'MIT-LICENSE', 'README.rdoc', 'lib/**/*']
+  s.files        = Dir['CHANGELOG.md', 'MIT-LICENSE', 'README.md', 'lib/**/*']
   s.require_path = 'lib'
 
-  s.extra_rdoc_files = %w( README.rdoc )
-  s.rdoc_options.concat ['--main',  'README.rdoc']
+  s.extra_rdoc_files = %w( README.md )
+  s.rdoc_options.concat ['--main',  'README.md']
 
   s.add_dependency('activerecord', '~> 4.0.0.beta')
   s.add_dependency('actionpack', '~> 4.0.0.beta')
