@@ -2,19 +2,10 @@ source :rubygems
 
 gemspec
 
-if ENV['RAILS']
-  path ENV['RAILS'] do
-    gem 'actionpack'
-    gem 'activerecord'
-    gem 'railties'
-  end
-else
-  git 'git://github.com/rails/rails.git' do
-    gem 'actionpack'
-    gem 'activerecord'
-    gem 'railties'
-  end
+git 'git://github.com/rails/rails.git', branch: 'master' do
+  gem 'actionpack'
+  gem 'activerecord'
+  gem 'railties'
 end
 
-gem 'journey', github: 'rails/journey'
-gem 'activerecord-deprecated_finders', github: 'rails/activerecord-deprecated_finders'
+gem 'activerecord-deprecated_finders', github: 'rails/activerecord-deprecated_finders', branch: 'master'
