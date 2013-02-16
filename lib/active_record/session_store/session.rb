@@ -20,7 +20,7 @@ module ActiveRecord
 
         # Hook to set up sessid compatibility.
         def find_by_session_id(session_id)
-          setup_sessid_compatibility!
+          Thread.exclusive { setup_sessid_compatibility! }
           find_by_session_id(session_id)
         end
 
