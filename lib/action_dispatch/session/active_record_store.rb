@@ -66,7 +66,9 @@ module ActionDispatch
               # If the sid was nil or if there is no pre-existing session under the sid,
               # force the generation of a new sid and associate a new session associated with the new sid
               sid = generate_sid
-              session = @@session_class.new(:session_id => sid, :data => {})
+              session = @@session_class.new
+              session.session_id = sid
+              session.data = {}
             end
             env[SESSION_RECORD_KEY] = session
             [sid, session.data]
