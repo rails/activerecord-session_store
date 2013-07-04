@@ -6,7 +6,7 @@ class <%= migration_class_name %> < ActiveRecord::Migration
       t.timestamps
     end
 
-    add_index :<%= session_table_name %>, :session_id
+    add_index :<%= session_table_name %>, :session_id, :unique => true
     add_index :<%= session_table_name %>, :updated_at
   end
 end
