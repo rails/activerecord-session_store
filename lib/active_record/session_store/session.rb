@@ -53,6 +53,12 @@ module ActiveRecord
       def initialize(attributes = nil)
         @data = nil
         super
+        unless attributes.nil?
+          if self.class.method_defined?(:session_id=)
+            self.session_id = attributes[:session_id]
+          end
+          self.data = attributes[:data]
+        end
       end
 
       # Lazy-unmarshal session state.
