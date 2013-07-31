@@ -77,6 +77,7 @@ module ActionDispatch
           ActiveRecord::Base.logger.quietly do
             record = get_session_model(env, sid)
             record.data = session_data
+            record.session_id= sid
             return false unless record.save
 
             session_data = record.data
