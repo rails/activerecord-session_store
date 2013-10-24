@@ -17,9 +17,9 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = %w( README.md )
   s.rdoc_options.concat ['--main',  'README.md']
 
-  s.add_dependency('activerecord', '>= 4.0.0.beta', '< 5')
-  s.add_dependency('actionpack', '>= 4.0.0.beta', '< 5')
-  s.add_dependency('railties', '>= 4.0.0.beta', '< 5')
+  s.add_dependency('activerecord', '>= 4.0.0', '< 5')
+  s.add_dependency('actionpack', '>= 4.0.0', '< 5')
+  s.add_dependency('railties', '>= 4.0.0', '< 5')
 
   s.add_development_dependency('sqlite3')
 end
