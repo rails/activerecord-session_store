@@ -10,7 +10,7 @@ Installation
 
 Include this gem into your Gemfile:
 
-    gem 'activerecord-session_store', github: 'rails/activerecord-session_store'
+    gem 'activerecord-session_store'
 
 Run the migration generator:
 
