@@ -10,7 +10,9 @@ Installation
 
 Include this gem into your Gemfile:
 
-    gem 'activerecord-session_store'
+```ruby
+gem 'activerecord-session_store'
+```
 
 Run the migration generator:
 
@@ -18,7 +20,9 @@ Run the migration generator:
 
 Then, set your session store in `config/initializers/session_store.rb`:
 
-    Foo::Application.config.session_store :active_record_store
+```ruby
+Foo::Application.config.session_store :active_record_store
+```
 
 Configuration
 --------------
@@ -37,9 +41,11 @@ ActionController::SessionOverflowError will be raised.
 You may configure the table name, primary key, and data column.
 For example, at the end of `config/application.rb`:
 
-    ActiveRecord::SessionStore::Session.table_name = 'legacy_session_table'
-    ActiveRecord::SessionStore::Session.primary_key = 'session_id'
-    ActiveRecord::SessionStore::Session.data_column_name = 'legacy_session_data'
+```ruby
+ActiveRecord::SessionStore::Session.table_name = 'legacy_session_table'
+ActiveRecord::SessionStore::Session.primary_key = 'session_id'
+ActiveRecord::SessionStore::Session.data_column_name = 'legacy_session_data'
+```
 
 Note that setting the primary key to the `session_id` frees you from
 having a separate `id` column if you don't want it. However, you must
@@ -53,8 +59,10 @@ the `sessions` table, making periodic session expiration a snap.
 You may provide your own session class implementation, whether a
 feature-packed Active Record or a bare-metal high-performance SQL
 store, by setting
-    
-    ActionDispatch::Session::ActiveRecordStore.session_class = MySessionClass
+
+```ruby
+ActionDispatch::Session::ActiveRecordStore.session_class = MySessionClass
+```
 
 You must implement these methods:
 
