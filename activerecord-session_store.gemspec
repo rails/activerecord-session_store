@@ -1,7 +1,9 @@
+require File.expand_path('../lib/active_record/session_store/version', __FILE__)
+
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'activerecord-session_store'
-  s.version     = '0.1.0'
+  s.version     = ActiveRecord::SessionStore::VERSION
   s.summary     = 'An Action Dispatch session store backed by an Active Record class.'
 
   s.required_ruby_version = '>= 1.9.3'
