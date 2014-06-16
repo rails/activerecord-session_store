@@ -21,7 +21,7 @@ Run the migration generator:
 Then, set your session store in `config/initializers/session_store.rb`:
 
 ```ruby
-Foo::Application.config.session_store :active_record_store
+Foo::Application.config.session_store :active_record_store, :key => '_foo_session'
 ```
 
 Configuration
