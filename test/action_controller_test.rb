@@ -266,7 +266,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     def with_test_route_set(options = {})
       with_routing do |set|
         set.draw do
-          get ':action', :to => 'action_controller_test/test'
+          get ':action', :controller => 'action_controller_test/test'
         end
 
         @app = self.class.build_app(set) do |middleware|
