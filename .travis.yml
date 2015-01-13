@@ -9,8 +9,10 @@ rvm:
   - ruby-head
 
 gemfile:
-  - gemfiles/Gemfile-edge
-  - Gemfile
+  - gemfiles/4.0.gemfile
+  - gemfiles/4.1.gemfile
+  - gemfiles/4.2.gemfile
+  - gemfiles/edge.gemfile
 
 notifications:
   email: false
@@ -22,11 +24,11 @@ matrix:
   fast_finish: true
   exclude:
     - rvm: 1.9.3
-      gemfile: gemfiles/Gemfile-edge
+      gemfile: gemfiles/edge.gemfile
     - rvm: 2.0
-      gemfile: gemfiles/Gemfile-edge
+      gemfile: gemfiles/edge.gemfile
     - rvm: 2.1
-      gemfile: gemfiles/Gemfile-edge
+      gemfile: gemfiles/edge.gemfile
   allow_failures:
     - rvm: ruby-head
-    - gemfile: gemfiles/Gemfile-edge
+    - gemfile: gemfiles/edge.gemfile
