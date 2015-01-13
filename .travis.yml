@@ -1,12 +1,32 @@
 language: ruby
+sudo: false
+
 rvm:
   - 1.9.3
-  - 2.0.0
-  - 2.1.0-preview2
+  - 2.0
+  - 2.1
+  - 2.2
+  - ruby-head
+
 gemfile:
   - gemfiles/Gemfile-edge
   - Gemfile
+
 notifications:
   email: false
+
 before_install:
   - gem install bundler
+
+matrix:
+  fast_finish: true
+  exclude:
+    - rvm: 1.9.3
+      gemfile: gemfiles/Gemfile-edge
+    - rvm: 2.0
+      gemfile: gemfiles/Gemfile-edge
+    - rvm: 2.1
+      gemfile: gemfiles/Gemfile-edge
+  allow_failures:
+    - rvm: ruby-head
+    - gemfile: gemfiles/Gemfile-edge
