@@ -61,29 +61,25 @@ module ActionDispatch
 
       private
         def get_session(env, sid)
-          ActiveRecord::Base.logger.quietly do
-            unless sid and session = @@session_class.find_by_session_id(sid)
-              # If the sid was nil or if there is no pre-existing session under the sid,
-              # force the generation of a new sid and associate a new session associated with the new sid
-              sid = generate_sid
-              session = @@session_class.new(:session_id => sid, :data => {})
-            end
-            env[SESSION_RECORD_KEY] = session
-            [sid, session.data]
+          unless sid and session = @@session_class.find_by_session_id(sid)
+            # If the sid was nil or if there is no pre-existing session under the sid,
+            # force the generation of a new sid and associate a new session associated with the new sid
+            sid = generate_sid
+            session = @@session_class.new(:session_id => sid, :data => {})
           end
+          env[SESSION_RECORD_KEY] = session
+          [sid, session.data]
         end
 
         def set_session(env, sid, session_data, options)
-          ActiveRecord::Base.logger.quietly do
-            record = get_session_model(env, sid)
-            record.data = session_data
-            return false unless record.save
+          record = get_session_model(env, sid)
+          record.data = session_data
+          return false unless record.save
 
-            session_data = record.data
-            if session_data && session_data.respond_to?(:each_value)
-              session_data.each_value do |obj|
-                obj.clear_association_cache if obj.respond_to?(:clear_association_cache)
-              end
+          session_data = record.data
+          if session_data && session_data.respond_to?(:each_value)
+            session_data.each_value do |obj|
+              obj.clear_association_cache if obj.respond_to?(:clear_association_cache)
             end
           end
 
@@ -92,10 +88,8 @@ module ActionDispatch
 
         def destroy_session(env, session_id, options)
           if sid = current_session_id(env)
-            ActiveRecord::Base.logger.quietly do
-              get_session_model(env, sid).destroy
-              env[SESSION_RECORD_KEY] = nil
-            end
+            get_session_model(env, sid).destroy
+            env[SESSION_RECORD_KEY] = nil
           end
 
           generate_sid unless options[:drop]
