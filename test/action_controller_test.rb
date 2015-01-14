@@ -36,11 +36,8 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
   end
 
   def setup
+    ActionDispatch::Session::ActiveRecordStore.session_class.drop_table! rescue nil
     ActionDispatch::Session::ActiveRecordStore.session_class.create_table!
-  end
-
-  def teardown
-    ActionDispatch::Session::ActiveRecordStore.session_class.drop_table!
   end
 
   %w{ session sql_bypass }.each do |class_name|
