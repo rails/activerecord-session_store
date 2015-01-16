@@ -1,4 +1,5 @@
 require 'helper'
+require "stringio"
 
 class ActionControllerTest < ActionDispatch::IntegrationTest
   class TestController < ActionController::Base
@@ -77,6 +78,19 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
           get '/renew'
           assert_response :success
           assert_not_equal [], headers['Set-Cookie']
+        end
+      end
+    end
+
+    define_method("test_#{class_name}_store_does_not_log_sql") do
+      with_store class_name do
+        with_fake_logger do
+          with_test_route_set do
+            get "/set_session_value"
+            get "/get_session_value"
+            assert_no_match(/INSERT/, fake_logger.string)
+            assert_no_match(/SELECT/, fake_logger.string)
+          end
         end
       end
     end
@@ -281,5 +295,17 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       yield
     ensure
       ActionDispatch::Session::ActiveRecordStore.session_class = session_class
+    end
+
+    def with_fake_logger
+      original_logger = ActiveRecord::Base.logger
+      ActiveRecord::Base.logger = Logger.new(fake_logger)
+      yield
+    ensure
+      ActiveRecord::Base.logger = original_logger
+    end
+
+    def fake_logger
+      @fake_logger ||= StringIO.new
     end
 end
