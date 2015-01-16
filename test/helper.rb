@@ -48,3 +48,7 @@ class RoutedRackApp
     @stack.call(env)
   end
 end
+
+if ActiveSupport::TestCase.respond_to?(:test_order=)
+  ActiveSupport::TestCase.test_order = :random
+end
