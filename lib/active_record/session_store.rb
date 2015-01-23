@@ -1,3 +1,4 @@
+require 'active_record/session_store/version'
 require 'action_dispatch/session/active_record_store'
 require "active_record/session_store/extension/logger_silencer"
 
