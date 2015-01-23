@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rvm gemset use activerecord-session_store --create

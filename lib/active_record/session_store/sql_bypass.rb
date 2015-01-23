@@ -66,7 +66,8 @@ module ActiveRecord
 
       delegate :connection, :connection=, :connection_pool, :connection_pool=, :to => self
 
-      attr_reader :session_id, :new_record
+      attr_accessor :session_id
+      attr_reader :new_record
       alias :new_record? :new_record
 
       attr_writer :data
