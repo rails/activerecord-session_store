@@ -72,18 +72,6 @@ module ActiveRecord
         s = Session.new
         assert !s.loaded?, 'session is not loaded'
       end
-
-      def test_construct_with_mass_assignemnt
-        Session.create_table!
-        session_id = "11"
-        data = "data"
-        s = session_klass.new(:data => data, :session_id => session_id)
-        assert_equal session_id, s.session_id
-        assert_equal data, s.data
-      ensure
-        Session.drop_table!
-      end
-
     end
   end
 end
