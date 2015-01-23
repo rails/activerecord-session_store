@@ -1,3 +1,4 @@
+require "active_support/core_ext/module/attribute_accessors"
 require 'action_dispatch/middleware/session/abstract_store'
 
 module ActionDispatch

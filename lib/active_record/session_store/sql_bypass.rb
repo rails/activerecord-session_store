@@ -1,3 +1,5 @@
+require "active_support/core_ext/module/attribute_accessors"
+
 module ActiveRecord
   module SessionStore
     # A barebones session store which duck-types with the default session

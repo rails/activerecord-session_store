@@ -1,3 +1,5 @@
+require "active_support/core_ext/module/attribute_accessors"
+
 module ActiveRecord
   module SessionStore
     # The default Active Record class.
