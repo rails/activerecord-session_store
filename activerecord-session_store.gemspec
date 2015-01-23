@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.author      = 'David Heinemeier Hansson'
   s.email       = 'david@loudthinking.com'
-  s.homepage    = 'http://www.rubyonrails.org'
+  s.homepage    = 'https://github.com/rails/activerecord-session_store'
 
   s.files        = Dir['CHANGELOG.md', 'MIT-LICENSE', 'README.md', 'lib/**/*']
   s.require_path = 'lib'
