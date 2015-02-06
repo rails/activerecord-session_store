@@ -35,3 +35,8 @@ require 'active_record/session_store/railtie' if defined?(Rails)
 
 ActionDispatch::Session::ActiveRecordStore.session_class = ActiveRecord::SessionStore::Session
 Logger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
+
+begin
+  require "syslog/logger"
+  Syslog::Logger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
+rescue LoadError; end

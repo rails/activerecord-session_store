@@ -30,8 +30,11 @@ module ActiveRecord
         end
 
         def add_with_threadsafety(severity, message = nil, progname = nil, &block)
-          return true if @logdev.nil? or (severity || UNKNOWN) < level
-          add_without_threadsafety(severity, message, progname, &block)
+          if !defined?(@logdev) || @logdev.nil? || (severity || UNKNOWN) < level
+            true
+          else
+            add_without_threadsafety(severity, message, progname, &block)
+          end
         end
 
         # Silences the logger for the duration of the block.

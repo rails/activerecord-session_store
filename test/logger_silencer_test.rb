@@ -15,8 +15,10 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
   end
 
   def setup
-    ActionDispatch::Session::ActiveRecordStore.session_class.drop_table! rescue nil
-    ActionDispatch::Session::ActiveRecordStore.session_class.create_table!
+    session_class = ActiveRecord::SessionStore::Session
+    session_class.drop_table! rescue nil
+    session_class.create_table!
+    ActionDispatch::Session::ActiveRecordStore.session_class = session_class
   end
 
   %w{ session sql_bypass }.each do |class_name|
@@ -34,14 +36,38 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_log_silencer_with_logger_not_raise_exception
+    with_logger Logger.new(Tempfile.new("tempfile")) do
+      with_test_route_set do
+        get "/set_session_value"
+      end
+    end
+  end
+
+  begin
+    require "syslogger/logger"
+
+    def test_log_silencer_with_syslog_logger_not_raise_exception
+      with_logger Syslog::Logger.new("ar_session_store_test") do
+        with_test_route_set do
+          get "/set_session_value"
+        end
+      end
+    end
+  rescue LoadError; end
+
   private
 
-    def with_fake_logger
+    def with_logger(logger)
       original_logger = ActiveRecord::Base.logger
-      ActiveRecord::Base.logger = Logger.new(fake_logger)
+      ActiveRecord::Base.logger = logger
       yield
     ensure
       ActiveRecord::Base.logger = original_logger
+    end
+
+    def with_fake_logger(&block)
+      with_logger(Logger.new(fake_logger), &block)
     end
 
     def fake_logger
