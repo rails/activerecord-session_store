@@ -1,5 +1,4 @@
 require 'helper'
-require "stringio"
 
 class ActionControllerTest < ActionDispatch::IntegrationTest
   class TestController < ActionController::Base
@@ -78,19 +77,6 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
           get '/renew'
           assert_response :success
           assert_not_equal [], headers['Set-Cookie']
-        end
-      end
-    end
-
-    define_method("test_#{class_name}_store_does_not_log_sql") do
-      with_store class_name do
-        with_fake_logger do
-          with_test_route_set do
-            get "/set_session_value"
-            get "/get_session_value"
-            assert_no_match(/INSERT/, fake_logger.string)
-            assert_no_match(/SELECT/, fake_logger.string)
-          end
         end
       end
     end
@@ -271,41 +257,4 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
     end
   end
-
-  private
-
-    def with_test_route_set(options = {})
-      with_routing do |set|
-        set.draw do
-          get ':action', :controller => 'action_controller_test/test'
-        end
-
-        @app = self.class.build_app(set) do |middleware|
-          middleware.use ActionDispatch::Session::ActiveRecordStore, options.reverse_merge(:key => '_session_id')
-          middleware.delete "ActionDispatch::ShowExceptions"
-        end
-
-        yield
-      end
-    end
-
-    def with_store(class_name)
-      session_class, ActionDispatch::Session::ActiveRecordStore.session_class =
-        ActionDispatch::Session::ActiveRecordStore.session_class, "ActiveRecord::SessionStore::#{class_name.camelize}".constantize
-      yield
-    ensure
-      ActionDispatch::Session::ActiveRecordStore.session_class = session_class
-    end
-
-    def with_fake_logger
-      original_logger = ActiveRecord::Base.logger
-      ActiveRecord::Base.logger = Logger.new(fake_logger)
-      yield
-    ensure
-      ActiveRecord::Base.logger = original_logger
-    end
-
-    def fake_logger
-      @fake_logger ||= StringIO.new
-    end
 end

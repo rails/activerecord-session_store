@@ -34,6 +34,33 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
       yield(middleware) if block_given?
     end
   end
+
+  private
+
+    def with_test_route_set(options = {})
+      controller_namespace = self.class.to_s.underscore
+
+      with_routing do |set|
+        set.draw do
+          get ':action', :controller => "#{controller_namespace}/test"
+        end
+
+        @app = self.class.build_app(set) do |middleware|
+          middleware.use ActionDispatch::Session::ActiveRecordStore, options.reverse_merge(:key => '_session_id')
+          middleware.delete "ActionDispatch::ShowExceptions"
+        end
+
+        yield
+      end
+    end
+
+    def with_store(class_name)
+      session_class, ActionDispatch::Session::ActiveRecordStore.session_class =
+        ActionDispatch::Session::ActiveRecordStore.session_class, "ActiveRecord::SessionStore::#{class_name.camelize}".constantize
+      yield
+    ensure
+      ActionDispatch::Session::ActiveRecordStore.session_class = session_class
+    end
 end
 
 class RoutedRackApp
