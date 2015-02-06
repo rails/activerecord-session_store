@@ -38,7 +38,7 @@ module ActiveRecord
         end
 
         # Silences the logger for the duration of the block.
-        def silence(temporary_level = Logger::ERROR)
+        def silence_logger(temporary_level = Logger::ERROR)
           if silencer
             begin
               self.thread_level = temporary_level
@@ -68,7 +68,7 @@ module ActiveRecord
     end
 
     class NilLogger
-      def self.silence
+      def self.silence_logger
         yield
       end
     end
