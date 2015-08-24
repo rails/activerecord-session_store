@@ -59,7 +59,7 @@ module ActiveRecord
           end
       end
 
-      def initialize(attributes = nil)
+      def initialize(*)
         @data = nil
         super
       end
