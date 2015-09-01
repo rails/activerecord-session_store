@@ -86,3 +86,12 @@ MyLogger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
 
 This silencer is being used to silence the logger and not leaking private
 information into the log, and it is required for security reason.
+
+## Contributing to Active Record Session Store
+
+Active Record Session Store is work of many contributors. You're encouraged to submit pull requests, propose features and discuss issues.
+
+See [CONTRIBUTING](CONTRIBUTING.md).
+
+## License
+Active Record Session Store is released under the [MIT License](MIT-LICENSE).
