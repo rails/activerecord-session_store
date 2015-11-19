@@ -10,7 +10,7 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
     end
 
     def get_session_value
-      render :text => "foo: #{session[:foo].inspect}"
+      render :plain => "foo: #{session[:foo].inspect}"
     end
   end
 
