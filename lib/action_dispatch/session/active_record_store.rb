@@ -79,9 +79,9 @@ module ActionDispatch
           end
         end
 
-        def set_session(env, sid, session_data, options)
+        def write_session(request, sid, session_data, options)
           logger.silence_logger do
-            record = get_session_model(env, sid)
+            record = get_session_model(request, sid)
             record.data = session_data
             return false unless record.save
 
@@ -96,28 +96,37 @@ module ActionDispatch
           end
         end
 
-        def destroy_session(env, session_id, options)
+        def delete_session(request, session_id, options)
           logger.silence_logger do
-            if sid = current_session_id(env)
-              get_session_model(env, sid).destroy
-              env[SESSION_RECORD_KEY] = nil
+            if sid = current_session_id(request)
+              get_session_model(request, sid).destroy
+              request.env[SESSION_RECORD_KEY] = nil
             end
 
             generate_sid unless options[:drop]
           end
         end
 
-        def get_session_model(env, sid)
-          if env[ENV_SESSION_OPTIONS_KEY][:id].nil?
-            env[SESSION_RECORD_KEY] = find_session(sid)
-          else
-            env[SESSION_RECORD_KEY] ||= find_session(sid)
+        def get_session_model(request, id)
+          logger.silence_logger do
+            session = @@session_class.find_by_session_id(id) if id
+            if session.nil?
+              id = generate_sid
+              session = @@session_class.new(:session_id => id, :data => {})
+              session.save
+            end
+            if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
+              request.env[SESSION_RECORD_KEY] = session
+            else
+              request.env[SESSION_RECORD_KEY] ||= session
+            end
+            session
           end
         end
 
-        def find_session(id)
-          @@session_class.find_by_session_id(id) ||
-            @@session_class.new(:session_id => id, :data => {})
+        def find_session(request, id)
+          model = get_session_model(request, id)
+          [model.session_id, model.data]
         end
 
         def logger
