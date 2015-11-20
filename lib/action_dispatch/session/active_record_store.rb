@@ -111,8 +111,7 @@ module ActionDispatch
           logger.silence_logger do
             session = @@session_class.find_by_session_id(id) if id
             if session.nil?
-              id = generate_sid
-              session = @@session_class.new(:session_id => id, :data => {})
+              session = @@session_class.new(:session_id => generate_sid, :data => {})
               session.save
             end
             if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
