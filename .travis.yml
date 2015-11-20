@@ -9,9 +9,6 @@ rvm:
   - ruby-head
 
 gemfile:
-  - gemfiles/4.0.gemfile
-  - gemfiles/4.1.gemfile
-  - gemfiles/4.2.gemfile
   - gemfiles/edge.gemfile
 
 notifications:
@@ -22,13 +19,6 @@ before_install:
 
 matrix:
   fast_finish: true
-  exclude:
-    - rvm: 1.9.3
-      gemfile: gemfiles/edge.gemfile
-    - rvm: 2.0
-      gemfile: gemfiles/edge.gemfile
-    - rvm: 2.1
-      gemfile: gemfiles/edge.gemfile
   allow_failures:
     - rvm: ruby-head
     - gemfile: gemfiles/edge.gemfile
