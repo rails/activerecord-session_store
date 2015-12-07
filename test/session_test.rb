@@ -31,6 +31,16 @@ module ActiveRecord
         assert !Session.table_exists?
       end
 
+      def test_json_serialization
+        ActiveRecord::SessionStore::Session.serializer = :json
+
+        Session.create_table!
+        s = session_klass.create!(:data => 'world', :session_id => '7')
+
+        ret = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
+        assert_equal ret[0][Session.data_column_name], JSON.generate(s.data, quirks_mode: true)
+      end
+
       def test_find_by_sess_id_compat
         # Force class reload, as we need to redo the meta-programming
         ActiveRecord::SessionStore.send(:remove_const, :Session)
