@@ -62,11 +62,11 @@ module ActiveRecord
 
       # Transparently migrates existing session values from Marshal to JSON
       class HybridSerializer < JsonSerializer
-        MARSHAL_SIGNATURE = "\x04\x08".freeze
+        MARSHAL_SIGNATURE = 'BAh'.freeze
 
         def self.load(value)
           if needs_migration?(value)
-            Marshal.load(value)
+            Marshal.load(::Base64.decode64(value))
           else
             super
           end

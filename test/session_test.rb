@@ -32,13 +32,51 @@ module ActiveRecord
       end
 
       def test_json_serialization
-        ActiveRecord::SessionStore::Session.serializer = :json
-
         Session.create_table!
+        ActiveRecord::SessionStore::Session.serializer = :json
         s = session_klass.create!(:data => 'world', :session_id => '7')
 
-        ret = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
-        assert_equal ret[0][Session.data_column_name], JSON.generate(s.data, quirks_mode: true)
+        sessions = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
+        assert_equal sessions[0][Session.data_column_name], JSON.generate(s.data, quirks_mode: true)
+      end
+
+      def test_hybrid_serialization
+        Session.create_table!
+        # Star with marshal, which will serialize with Marshal
+        ActiveRecord::SessionStore::Session.serializer = :marshal
+        s1 = session_klass.create!(:data => 'world', :session_id => '1')
+
+        # Switch to hybrid, which will serialize as JSON
+        ActiveRecord::SessionStore::Session.serializer = :hybrid
+        s2 = session_klass.create!(:data => 'world', :session_id => '2')
+
+        # Check that first was serialized with Marshal and second as JSON
+        sessions = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
+        assert_equal sessions[0][Session.data_column_name], ::Base64.encode64(Marshal.dump(s1.data))
+        assert_equal sessions[1][Session.data_column_name], JSON.generate(s2.data, quirks_mode: true)
+      end
+
+      def test_hybrid_deserialization
+        Session.create_table!
+        # Star with marshal, which will serialize with Marshal
+        ActiveRecord::SessionStore::Session.serializer = :marshal
+        s = session_klass.create!(:data => 'world', :session_id => '1')
+
+        # Switch to hybrid, which will deserialize with Marshal if needed
+        ActiveRecord::SessionStore::Session.serializer = :hybrid
+
+        # Check that it was serialized with Marshal,
+        sessions = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
+        assert_equal sessions[0][Session.data_column_name], ::Base64.encode64(Marshal.dump(s.data))
+
+        # deserializes properly,
+        session = Session.find_by_session_id(s.id)
+        assert_equal s.data, session.data
+
+        # and reserializes as JSON
+        session.save
+        sessions = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
+        assert_equal sessions[0][Session.data_column_name], JSON.generate(s.data, quirks_mode: true)
       end
 
       def test_find_by_sess_id_compat
