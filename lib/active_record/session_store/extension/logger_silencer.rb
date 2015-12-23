@@ -13,8 +13,21 @@ module ActiveRecord
         included do
           cattr_accessor :silencer
           self.silencer = true
-          alias_method_chain :level, :threadsafety
-          alias_method_chain :add, :threadsafety
+          prepend PrependedMethods
+        end
+
+        module PrependedMethods
+          def level
+            thread_level || super
+          end
+
+          def add(severity, message = nil, progname = nil, &block)
+            if !defined?(@logdev) || @logdev.nil? || (severity || UNKNOWN) < level
+              true
+            else
+              super(severity, message, progname, &block)
+            end
+          end
         end
 
         def thread_level
@@ -23,18 +36,6 @@ module ActiveRecord
 
         def thread_level=(level)
           Thread.current[thread_hash_level_key] = level
-        end
-
-        def level_with_threadsafety
-          thread_level || level_without_threadsafety
-        end
-
-        def add_with_threadsafety(severity, message = nil, progname = nil, &block)
-          if !defined?(@logdev) || @logdev.nil? || (severity || UNKNOWN) < level
-            true
-          else
-            add_without_threadsafety(severity, message, progname, &block)
-          end
         end
 
         # Silences the logger for the duration of the block.
