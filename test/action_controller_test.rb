@@ -13,11 +13,11 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
 
     def get_session_value
-      render :text => "foo: #{session[:foo].inspect}"
+      render :plain => "foo: #{session[:foo].inspect}"
     end
 
     def get_session_id
-      render :text => "#{request.session_options[:id]}"
+      render :plain => "#{request.session.id}"
     end
 
     def call_reset_session
@@ -29,7 +29,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
 
     def renew
-      env["rack.session.options"][:renew] = true
+      session.options[:renew] = true
       session[:foo] = "baz"
       head :ok
     end
@@ -52,7 +52,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
           assert_response :success
           assert_equal 'foo: "bar"', response.body
 
-          get '/set_session_value', :foo => "baz"
+          get '/set_session_value', params: { :foo => "baz" }
           assert_response :success
           assert cookies['_session_id']
 
@@ -92,7 +92,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
 
   def test_calling_reset_session_twice_does_not_raise_errors
     with_test_route_set do
-      get '/call_reset_session', :twice => "true"
+      get '/call_reset_session', params: { :twice => "true" }
       assert_response :success
 
       get '/get_session_value'
@@ -189,7 +189,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
 
       reset!
 
-      get '/get_session_value', :_session_id => session_id
+      get '/get_session_value', params: { :_session_id => session_id }
       assert_response :success
       assert_equal 'foo: nil', response.body
       assert_not_equal session_id, cookies['_session_id']
@@ -210,11 +210,11 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
 
       reset!
 
-      get '/set_session_value', :_session_id => session_id, :foo => "baz"
+      get '/set_session_value', params: { :_session_id => session_id, :foo => "baz" }
       assert_response :success
       assert_equal session_id, cookies['_session_id']
 
-      get '/get_session_value', :_session_id => session_id
+      get '/get_session_value', params: { :_session_id => session_id }
       assert_response :success
       assert_equal 'foo: "baz"', response.body
       assert_equal session_id, cookies['_session_id']
@@ -240,7 +240,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
   def test_incoming_invalid_session_id_via_parameter_should_be_ignored
     with_test_route_set(:cookie_only => false) do
       open_session do |sess|
-        sess.get '/set_session_value', :_session_id => 'INVALID'
+        sess.get '/set_session_value', params: { :_session_id => 'INVALID' }
         new_session_id = sess.cookies['_session_id']
         assert_not_equal 'INVALID', new_session_id
 

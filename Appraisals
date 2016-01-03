@@ -11,6 +11,7 @@ appraise "edge" do
     gem "actionpack"
     gem "activerecord"
     gem "railties"
+    gem "rack", github: "rack/rack"
   end
 
   gem "arel", github: "rails/arel"
