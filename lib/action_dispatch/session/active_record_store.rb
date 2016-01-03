@@ -58,7 +58,12 @@ module ActionDispatch
       cattr_accessor :session_class
 
       SESSION_RECORD_KEY = 'rack.session.record'
-      ENV_SESSION_OPTIONS_KEY = Rack::Session::Abstract::ENV_SESSION_OPTIONS_KEY
+
+      if Rack.const_defined?('RACK_SESSION_OPTIONS')
+        ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
+      else
+        ENV_SESSION_OPTIONS_KEY = Rack::Session::Abstract::ENV_SESSION_OPTIONS_KEY
+      end
 
       private
         def get_session(env, sid)
