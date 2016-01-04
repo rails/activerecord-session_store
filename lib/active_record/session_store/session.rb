@@ -27,12 +27,6 @@ module ActiveRecord
           @data_column_size_limit ||= columns_hash[data_column_name].limit
         end
 
-        # Hook to set up sessid compatibility.
-        def find_by_session_id(session_id)
-          Thread.exclusive { setup_sessid_compatibility! }
-          find_by_session_id(session_id)
-        end
-
         private
           def session_id_column
             'session_id'
