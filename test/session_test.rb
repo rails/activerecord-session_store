@@ -43,6 +43,7 @@ module ActiveRecord
           end
         end
         klass.create_table!
+        klass.send(:setup_sessid_compatibility!)
 
         assert klass.columns_hash['sessid'], 'sessid column exists'
         session = klass.new(:data => 'hello')
