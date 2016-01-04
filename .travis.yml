@@ -1,34 +1,36 @@
 language: ruby
 sudo: false
-
+cache: bundler
 rvm:
-  - 1.9.3
+  - 1.9
   - 2.0
   - 2.1
-  - 2.2
+  - 2.2.4
+  - 2.3.0
   - ruby-head
-
 gemfile:
-  - gemfiles/4.0.gemfile
-  - gemfiles/4.1.gemfile
-  - gemfiles/4.2.gemfile
-  - gemfiles/edge.gemfile
-
-notifications:
-  email: false
-
-before_install:
-  - gem install bundler
-
+  - gemfiles/rails_4.0.gemfile
+  - gemfiles/rails_4.1.gemfile
+  - gemfiles/rails_4.2.gemfile
+  - gemfiles/rails_5.0.gemfile
+  - gemfiles/rails_edge.gemfile
 matrix:
   fast_finish: true
   exclude:
-    - rvm: 1.9.3
-      gemfile: gemfiles/edge.gemfile
+    - rvm: 1.9
+      gemfile: gemfiles/rails_5.0.gemfile
     - rvm: 2.0
-      gemfile: gemfiles/edge.gemfile
+      gemfile: gemfiles/rails_5.0.gemfile
     - rvm: 2.1
-      gemfile: gemfiles/edge.gemfile
+      gemfile: gemfiles/rails_5.0.gemfile
+    - rvm: 1.9
+      gemfile: gemfiles/rails_edge.gemfile
+    - rvm: 2.0
+      gemfile: gemfiles/rails_edge.gemfile
+    - rvm: 2.1
+      gemfile: gemfiles/rails_edge.gemfile
   allow_failures:
     - rvm: ruby-head
-    - gemfile: gemfiles/edge.gemfile
+    - gemfile: gemfiles/rails_edge.gemfile
+notifications:
+  email: false
