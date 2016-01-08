@@ -4,7 +4,7 @@ require "active_record/session_store/extension/logger_silencer"
 module ActiveRecord
   module SessionStore
     module ClassMethods # :nodoc:
-      cattr_accessor :serializer
+      mattr_accessor :serializer
 
       def serialize(data)
         determine_serializer.dump(data) if data
