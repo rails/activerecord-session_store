@@ -1,5 +1,6 @@
 require 'action_dispatch/session/active_record_store'
 require "active_record/session_store/extension/logger_silencer"
+require 'active_support/core_ext/hash/keys'
 
 module ActiveRecord
   module SessionStore
@@ -31,10 +32,14 @@ module ActiveRecord
       def determine_serializer
         self.serializer ||= :marshal
         case self.serializer
-          when :marshal then MarshalSerializer
-          when :json    then JsonSerializer
-          when :hybrid  then HybridSerializer
-          else self.serializer
+          when :marshal then
+            MarshalSerializer
+          when :json then
+            JsonSerializer
+          when :hybrid then
+            HybridSerializer
+          else
+            self.serializer
         end
       end
 
@@ -52,11 +57,12 @@ module ActiveRecord
       # Uses built-in JSON library to encode/decode session
       class JsonSerializer
         def self.load(value)
-          JSON.parse(value, quirks_mode: true)
+          hash = JSON.parse(value, quirks_mode: true).with_indifferent_access
+          hash[:value]
         end
 
         def self.dump(value)
-          JSON.generate(value, quirks_mode: true)
+          JSON.generate({value: value}, quirks_mode: true)
         end
       end
 

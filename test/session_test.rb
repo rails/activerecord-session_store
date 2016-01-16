@@ -1,5 +1,6 @@
-require 'helper'
+require '../test/helper'
 require 'active_record/session_store'
+require 'active_support/core_ext/hash/keys'
 
 module ActiveRecord
   module SessionStore
@@ -37,7 +38,7 @@ module ActiveRecord
         s = session_klass.create!(:data => 'world', :session_id => '7')
 
         sessions = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
-        assert_equal sessions[0][Session.data_column_name], JSON.generate(s.data, quirks_mode: true)
+        assert_equal JSON.generate({value: s.data}, quirks_mode: true), sessions[0][Session.data_column_name]
       end
 
       def test_hybrid_serialization
@@ -52,8 +53,8 @@ module ActiveRecord
 
         # Check that first was serialized with Marshal and second as JSON
         sessions = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
-        assert_equal sessions[0][Session.data_column_name], ::Base64.encode64(Marshal.dump(s1.data))
-        assert_equal sessions[1][Session.data_column_name], JSON.generate(s2.data, quirks_mode: true)
+        assert_equal ::Base64.encode64(Marshal.dump(s1.data)), sessions[0][Session.data_column_name]
+        assert_equal JSON.generate({value: s2.data}, quirks_mode: true), sessions[1][Session.data_column_name]
       end
 
       def test_hybrid_deserialization
@@ -76,7 +77,7 @@ module ActiveRecord
         # and reserializes as JSON
         session.save
         sessions = ActiveRecord::Base.connection.execute("SELECT * FROM #{Session.table_name}")
-        assert_equal sessions[0][Session.data_column_name], JSON.generate(s.data, quirks_mode: true)
+        assert_equal JSON.generate({value: s.data}, quirks_mode: true), sessions[0][Session.data_column_name]
       end
 
       def test_find_by_sess_id_compat
