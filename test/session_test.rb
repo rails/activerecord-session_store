@@ -1,4 +1,4 @@
-require '../test/helper'
+require 'helper'
 require 'active_record/session_store'
 require 'active_support/core_ext/hash/keys'
 
