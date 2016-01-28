@@ -1,6 +1,7 @@
 require 'action_dispatch/session/active_record_store'
 require "active_record/session_store/extension/logger_silencer"
 require 'active_support/core_ext/hash/keys'
+require 'multi_json'
 
 module ActiveRecord
   module SessionStore
@@ -57,12 +58,12 @@ module ActiveRecord
       # Uses built-in JSON library to encode/decode session
       class JsonSerializer
         def self.load(value)
-          hash = JSON.parse(value, quirks_mode: true).with_indifferent_access
+          hash = MultiJson.load(value).with_indifferent_access
           hash[:value]
         end
 
         def self.dump(value)
-          JSON.generate({value: value}, quirks_mode: true)
+          MultiJson.dump(value: value)
         end
       end
 

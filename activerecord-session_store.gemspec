@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.add_dependency('activerecord', '>= 4.0.0', '< 5')
   s.add_dependency('actionpack', '>= 4.0.0', '< 5')
   s.add_dependency('railties', '>= 4.0.0', '< 5')
+  s.add_dependency('multi_json', '~> 1.11', '>= 1.11.2')
 
   s.add_development_dependency('sqlite3')
   s.add_development_dependency('appraisal')

@@ -2,6 +2,7 @@ require 'helper'
 
 class ActionControllerTest < ActionDispatch::IntegrationTest
   class TestController < ActionController::Base
+    protect_from_forgery
     def no_session_access
       head :ok
     end
