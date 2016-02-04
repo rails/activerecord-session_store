@@ -1,10 +1,12 @@
 require "active_support/core_ext/module/attribute_accessors"
+require "thread"
 
 module ActiveRecord
   module SessionStore
     # The default Active Record class.
     class Session < ActiveRecord::Base
       extend ClassMethods
+      SEMAPHORE = Mutex.new
 
       ##
       # :singleton-method:
@@ -29,7 +31,7 @@ module ActiveRecord
 
         # Hook to set up sessid compatibility.
         def find_by_session_id(session_id)
-          Thread.exclusive { setup_sessid_compatibility! }
+          SEMAPHORE.synchronize { setup_sessid_compatibility! }
           find_by_session_id(session_id)
         end
 

@@ -13,8 +13,10 @@ module ActiveRecord
         included do
           cattr_accessor :silencer
           self.silencer = true
-          alias_method_chain :level, :threadsafety
-          alias_method_chain :add, :threadsafety
+          alias_method :level_without_threadsafety, :level
+          alias_method :level, :level_with_threadsafety
+          alias_method :add_without_threadsafety, :add
+          alias_method :add, :add_with_threadsafety
         end
 
         def thread_level
