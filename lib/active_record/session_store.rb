@@ -39,9 +39,8 @@ module ActiveRecord
       end
 
       def serializer_class
-        self.serializer ||= :marshal
         case self.serializer
-          when :marshal then
+          when :marshal, nil then
             MarshalSerializer
           when :json then
             JsonSerializer
