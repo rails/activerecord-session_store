@@ -9,11 +9,11 @@ module ActiveRecord
       mattr_accessor :serializer
 
       def serialize(data)
-        determine_serializer.dump(data) if data
+        serializer_class.dump(data) if data
       end
 
       def deserialize(data)
-        determine_serializer.load(data) if data
+        serializer_class.load(data) if data
       end
 
       def drop_table!
@@ -38,7 +38,7 @@ module ActiveRecord
         connection.add_index table_name, session_id_column, :unique => true
       end
 
-      def determine_serializer
+      def serializer_class
         self.serializer ||= :marshal
         case self.serializer
           when :marshal then
