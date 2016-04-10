@@ -97,11 +97,19 @@ module ActionDispatch
 
       def delete_session(request, session_id, options)
         logger.silence_logger do
-          if sid = current_session_id(request)
-            get_session_model(request, sid).destroy
-            request.env[SESSION_RECORD_KEY] = nil
+          sid = current_session_id(request)
+          model = get_session_model(request, sid) if sid
+          data = model.data if model
+          model.destroy if model
+          request.env[SESSION_RECORD_KEY] = nil 
+          return nil if options[:drop]
+          new_sid = generate_sid
+          if options[:renew]
+            new_model = @@session_class.new(:session_id => new_sid, :data => data)
+            new_model.save
+            request.env[SESSION_RECORD_KEY] = new_model
           end
-          generate_sid unless options[:drop]
+          new_sid
         end
       end
 
