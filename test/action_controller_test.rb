@@ -38,7 +38,6 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
 
     def renew
       request.env["rack.session.options"][:renew] = true
-      session[:foo] = "baz"
       head :ok
     end
   end
