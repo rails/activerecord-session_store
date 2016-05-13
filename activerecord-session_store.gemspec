@@ -1,4 +1,4 @@
-require_relative "lib/active_record/session_store/version"
+require "./lib/active_record/session_store/version"
 
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
