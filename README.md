@@ -38,19 +38,26 @@ Session data is marshaled to the `data` column in Base64 format.
 If the data you write is larger than the column's size limit,
 ActionController::SessionOverflowError will be raised.
 
-You may configure the table name, primary key, and data column.
-For example, at the end of `config/application.rb`:
+You may configure the table name, primary key, data column, and
+serializer type. For example, at the end of `config/application.rb`:
 
 ```ruby
 ActiveRecord::SessionStore::Session.table_name = 'legacy_session_table'
 ActiveRecord::SessionStore::Session.primary_key = 'session_id'
 ActiveRecord::SessionStore::Session.data_column_name = 'legacy_session_data'
+ActiveRecord::SessionStore::Session.serializer = :json
 ```
 
 Note that setting the primary key to the `session_id` frees you from
 having a separate `id` column if you don't want it. However, you must
 set `session.model.id = session.session_id` by hand!  A before filter
 on ApplicationController is a good place.
+
+The serializer may be one of `marshal`, `json`, or `hybrid`.  `marshal` is
+the default and uses the built-in Marshal methods coupled with Base64
+encoding.  `json` does what it says on the tin, using the `parse()` and
+`generate()` methods of the JSON module.  `hybrid` will read either type
+but write as JSON.
 
 Since the default class is a simple Active Record, you get timestamps
 for free if you add `created_at` and `updated_at` datetime columns to

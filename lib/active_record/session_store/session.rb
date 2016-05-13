@@ -14,7 +14,7 @@ module ActiveRecord
       cattr_accessor :data_column_name
       self.data_column_name = 'data'
 
-      before_save :marshal_data!
+      before_save :serialize_data!
       before_save :raise_on_session_data_overflow!
 
       # This method is defiend in `protected_attributes` gem. We can't check for
@@ -66,9 +66,9 @@ module ActiveRecord
         super
       end
 
-      # Lazy-unmarshal session state.
+      # Lazy-deserialize session state.
       def data
-        @data ||= self.class.unmarshal(read_attribute(@@data_column_name)) || {}
+        @data ||= self.class.deserialize(read_attribute(@@data_column_name)) || {}
       end
 
       attr_writer :data
@@ -79,9 +79,9 @@ module ActiveRecord
       end
 
       private
-        def marshal_data!
+        def serialize_data!
           return false unless loaded?
-          write_attribute(@@data_column_name, self.class.marshal(data))
+          write_attribute(@@data_column_name, self.class.serialize(data))
         end
 
         # Ensures that the data about to be stored in the database is not
