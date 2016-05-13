@@ -27,7 +27,6 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
     RoutedRackApp.new(routes || ActionDispatch::Routing::RouteSet.new) do |middleware|
       middleware.use ActionDispatch::DebugExceptions
       middleware.use ActionDispatch::Callbacks
-      middleware.use ActionDispatch::ParamsParser
       middleware.use ActionDispatch::Cookies
       middleware.use ActionDispatch::Flash
       middleware.use Rack::Head
