@@ -15,6 +15,8 @@ namespace 'db:sessions' do
   desc "Trim old sessions from the table (default: > 30 days)"
   task :trim => [:environment, 'db:load_config'] do
     cutoff_period = (ENV['SESSION_DAYS_TRIM_THRESHOLD'] || 30).to_i.days.ago
-    ActiveRecord::Base.connection.execute("DELETE FROM #{ActiveRecord::SessionStore::Session.table_name} WHERE updated_at < '#{cutoff_period}'")
+    ActiveRecord::SessionStore::Session.
+      where("updated_at < ?", cutoff_period).
+      delete_all
   end
 end
