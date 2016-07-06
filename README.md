@@ -31,7 +31,8 @@ The default assumes a `sessions` tables with columns:
 
 *  `id` (numeric primary key),
 *  `session_id` (string, usually varchar; maximum length is 255), and
-*  `data` (text or longtext; careful if your session data exceeds 65KB).
+*  `data` (text, longtext, json or jsonb); careful if your session data exceeds
+65KB).
 
 The `session_id` column should always be indexed for speedy lookups.
 Session data is marshaled to the `data` column in Base64 format.
@@ -53,11 +54,14 @@ having a separate `id` column if you don't want it. However, you must
 set `session.model.id = session.session_id` by hand!  A before filter
 on ApplicationController is a good place.
 
-The serializer may be one of `marshal`, `json`, or `hybrid`.  `marshal` is
-the default and uses the built-in Marshal methods coupled with Base64
-encoding.  `json` does what it says on the tin, using the `parse()` and
-`generate()` methods of the JSON module.  `hybrid` will read either type
-but write as JSON.
+The serializer may be class responding to `#load(value)` and `#dump(value)`, or
+a symbol of `marshal`, `json`, `hybrid` or `null`. `marshal` is the default and
+uses the built-in Marshal methods coupled with Base64 encoding. `json` does
+what it says on the tin, using the `parse()` and `generate()` methods of the
+JSON module. `hybrid` will read either type but write as JSON. `null` will
+not perform serialization, leaving that up to the ActiveRecord database
+adapter. This allows you to take advantage of the native JSON capabilities of
+your database.
 
 Since the default class is a simple Active Record, you get timestamps
 for free if you add `created_at` and `updated_at` datetime columns to

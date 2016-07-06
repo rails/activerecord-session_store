@@ -47,6 +47,8 @@ module ActiveRecord
             JsonSerializer
           when :hybrid then
             HybridSerializer
+          when :null then
+            NullSerializer
           else
             self.serializer
         end
@@ -89,6 +91,17 @@ module ActiveRecord
 
         def self.needs_migration?(value)
           value.start_with?(MARSHAL_SIGNATURE)
+        end
+      end
+
+      # Defer serialization to the ActiveRecord database adapter
+      class NullSerializer
+        def self.load(value)
+          value
+        end
+
+        def self.dump(value)
+          value
         end
       end
     end
