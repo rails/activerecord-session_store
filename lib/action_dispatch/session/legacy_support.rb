@@ -35,7 +35,8 @@ module ActionDispatch
         generate_sid unless options[:drop]
       end
 
-      def get_session_model(request, sid)
+      def get_session_model(request, sid, generate_id = false)
+        sid = generate_sid if generate_id
         if request.env[self.class::ENV_SESSION_OPTIONS_KEY][:id].nil?
           request.env[self.class::SESSION_RECORD_KEY] = find_session(sid)
         else
