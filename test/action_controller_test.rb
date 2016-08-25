@@ -37,6 +37,12 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       head :ok
     end
 
+    def change_session_id
+      session[:foo] = 'bar'
+      request.session_options[:id] = params[:session_id]
+      head :ok
+    end
+
     def renew
       request.env["rack.session.options"][:renew] = true
       head :ok
@@ -99,6 +105,24 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       get '/get_session_value'
       assert_response :success
       assert_equal 'foo: nil', response.body
+    end
+  end
+
+  def test_changing_session_id
+    with_test_route_set do
+      session_id = 'id'
+
+      if ActiveRecord::VERSION::MAJOR == 4
+        get '/change_session_id', session_id: session_id
+      else
+        get '/change_session_id', params: { session_id: session_id }
+      end
+
+      assert_equal session[:foo], 'bar'
+
+      get '/get_session_id'
+      assert_equal session_id, session.id
+      assert_equal session[:foo], 'bar'
     end
   end
 

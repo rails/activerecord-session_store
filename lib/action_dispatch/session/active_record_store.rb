@@ -80,7 +80,7 @@ module ActionDispatch
 
       def write_session(request, sid, session_data, options)
         logger.silence_logger do
-          record = get_session_model(request, sid)
+          record = get_session_model(request, sid, generate_id: false)
           record.data = session_data
           return false unless record.save
 
@@ -91,7 +91,7 @@ module ActionDispatch
             end
           end
 
-          sid
+          record.session_id
         end
       end
 
@@ -119,11 +119,11 @@ module ActionDispatch
         end
       end
 
-      def get_session_model(request, id)
+      def get_session_model(request, id, generate_id: true)
         logger.silence_logger do
           model = @@session_class.find_by_session_id(id)
           if !model
-            id = generate_sid
+            id = generate_sid if generate_id
             model = @@session_class.new(:session_id => id, :data => {})
             model.save
           end
