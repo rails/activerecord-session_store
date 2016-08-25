@@ -112,6 +112,7 @@ module ActionDispatch
             if options[:renew]
               new_model = @@session_class.new(:session_id => new_sid, :data => data)
               new_model.save
+              request.session_options[:id] = new_sid
               request.env[SESSION_RECORD_KEY] = new_model
             end
             new_sid
@@ -127,12 +128,7 @@ module ActionDispatch
             model = @@session_class.new(:session_id => id, :data => {})
             model.save
           end
-          if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
-            request.env[SESSION_RECORD_KEY] = model
-          else
-            request.env[SESSION_RECORD_KEY] ||= model
-          end
-          model
+          request.env[SESSION_RECORD_KEY] = model
         end
       end
 

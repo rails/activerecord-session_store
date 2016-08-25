@@ -37,11 +37,8 @@ module ActionDispatch
 
       def get_session_model(request, sid, generate_id = false)
         sid = generate_sid if generate_id
-        if request.env[self.class::ENV_SESSION_OPTIONS_KEY][:id].nil?
-          request.env[self.class::SESSION_RECORD_KEY] = find_session(sid)
-        else
-          request.env[self.class::SESSION_RECORD_KEY] ||= find_session(sid)
-        end
+        model = find_session(sid)
+        request.env[self.class::SESSION_RECORD_KEY] = model
       end
 
       def find_session(id)
