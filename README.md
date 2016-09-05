@@ -17,6 +17,10 @@ gem 'activerecord-session_store'
 Run the migration generator:
 
     rails generate active_record:session_migration
+    
+Run the migration:
+
+    rake db:migrate
 
 Then, set your session store in `config/initializers/session_store.rb`:
 
