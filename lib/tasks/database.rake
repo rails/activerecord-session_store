@@ -9,7 +9,7 @@ namespace 'db:sessions' do
 
   desc "Clear the sessions table"
   task :clear => [:environment, 'db:load_config'] do
-    ActiveRecord::Base.connection.execute "DELETE FROM #{ActiveRecord::SessionStore::Session.table_name}"
+    ActiveRecord::Base.connection.execute "TRUNCATE TABLE #{ActiveRecord::SessionStore::Session.table_name}"
   end
 
   desc "Trim old sessions from the table (default: > 30 days)"
