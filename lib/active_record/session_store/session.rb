@@ -80,7 +80,7 @@ module ActiveRecord
 
       private
         def serialize_data!
-          return false unless loaded?
+          return unless loaded?
           write_attribute(@@data_column_name, self.class.serialize(data))
         end
 
@@ -88,7 +88,7 @@ module ActiveRecord
         # larger than the data storage column. Raises
         # ActionController::SessionOverflowError.
         def raise_on_session_data_overflow!
-          return false unless loaded?
+          return unless loaded?
           limit = self.class.data_column_size_limit
           if limit and read_attribute(@@data_column_name).size > limit
             raise ActionController::SessionOverflowError
