@@ -66,7 +66,7 @@ module ActionDispatch
 
     private
       def get_session(request, sid)
-        logger.silence_logger do
+        logger.silence do
           unless sid and session = @@session_class.find_by_session_id(sid)
             # If the sid was nil or if there is no pre-existing session under the sid,
             # force the generation of a new sid and associate a new session associated with the new sid
@@ -79,7 +79,7 @@ module ActionDispatch
       end
 
       def write_session(request, sid, session_data, options)
-        logger.silence_logger do
+        logger.silence do
           record = get_session_model(request, sid)
           record.data = session_data
           return false unless record.save
@@ -96,7 +96,7 @@ module ActionDispatch
       end
 
       def delete_session(request, session_id, options)
-        logger.silence_logger do
+        logger.silence do
           if sid = current_session_id(request)
             if model = get_session_model(request, sid)
               data = model.data
@@ -120,7 +120,7 @@ module ActionDispatch
       end
 
       def get_session_model(request, id)
-        logger.silence_logger do
+        logger.silence do
           model = @@session_class.find_by_session_id(id)
           if !model
             id = generate_sid
