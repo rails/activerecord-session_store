@@ -65,7 +65,7 @@ module ActionDispatch
       end
 
     private
-      def get_session(request, sid)
+      def get_session(request, sid) # NOTE: Doesn't get invoked.
         logger.silence_logger do
           unless sid and session = @@session_class.find_by_session_id(sid)
             # If the sid was nil or if there is no pre-existing session under the sid,
@@ -77,9 +77,25 @@ module ActionDispatch
           [sid, session.data]
         end
       end
+      
+      def extract_session_id(request)
+        stale_session_check! do
+          unpacked_cookie_data(request)
+        end
+      end
+      
+      def unpacked_cookie_data(request)
+        request.fetch_header("action_dispatch.request.unsigned_session_cookie") do |k|
+          v = stale_session_check! do
+            get_cookie(request) || {}
+          end
+          request.set_header k, v
+        end
+      end
 
       def write_session(request, sid, session_data, options)
         logger.silence_logger do
+          sid ||= get_cookie(request)
           record = get_session_model(request, sid)
           record.data = session_data
           return false unless record.save
@@ -136,9 +152,21 @@ module ActionDispatch
         end
       end
 
-      def find_session(request, id)
+      def find_session(request, id) # NOTE: Doesn't get invoked.
         model = get_session_model(request, id)
         [model.session_id, model.data]
+      end
+      
+      def set_cookie(request, session_id, cookie)
+        cookie_jar(request)[@key] = cookie
+      end
+
+      def get_cookie(request)
+        cookie_jar(request)[@key]
+      end
+
+      def cookie_jar(request)
+        request.cookie_jar.signed_or_encrypted
       end
 
       def logger
