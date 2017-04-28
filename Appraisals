@@ -1,4 +1,4 @@
-[ '4.0', '4.1', '4.2' , '5.0' ].each do |ver|
+[ '4.0', '4.1', '4.2' , '5.0', '5.1' ].each do |ver|
   appraise "rails-#{ver}" do
     gem 'actionpack',   "~> #{ver}.0"
     gem 'activerecord', "~> #{ver}.0"
