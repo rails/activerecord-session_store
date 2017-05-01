@@ -1,8 +1,10 @@
-[ '4.0', '4.1', '4.2' , '5.0' ].each do |ver|
+[ '4.0', '4.1', '4.2' , '5.0', '5.1' ].each do |ver|
+  nokogiri_ver = ver.to_i < 5 ? '1.6' : '1.7'
   appraise "rails-#{ver}" do
     gem 'actionpack',   "~> #{ver}.0"
     gem 'activerecord', "~> #{ver}.0"
     gem 'railties',     "~> #{ver}.0"
+    gem 'nokogiri',     "~> #{nokogiri_ver}.0"
   end
 end
 
