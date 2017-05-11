@@ -17,7 +17,7 @@ gem 'activerecord-session_store'
 Run the migration generator:
 
     rails generate active_record:session_migration
-    
+
 Run the migration:
 
     rake db:migrate
@@ -27,6 +27,13 @@ Then, set your session store in `config/initializers/session_store.rb`:
 ```ruby
 Rails.application.config.session_store :active_record_store, :key => '_my_app_session'
 ```
+
+To avoid your sessions table expanding without limit as it will store expired and
+potentially sensitive session data, it is strongly recommended in production
+environments to schedule the `db:sessions:trim` rake task to run daily.
+Running `bin/rake db:sessions:trim` will delete all sessions that have not
+been updated in the last 30 days. The 30 days cutoff can be changed using the
+`SESSION_DAYS_TRIM_THRESHOLD` environment variable.
 
 Configuration
 --------------
