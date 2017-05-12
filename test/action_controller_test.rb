@@ -37,6 +37,12 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       head :ok
     end
 
+    def change_session_id
+      session[:foo] = 'bar'
+      request.session_options[:id] = params[:session_id] || 'id'
+      head :ok
+    end
+
     def renew
       request.env["rack.session.options"][:renew] = true
       head :ok
@@ -99,6 +105,49 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       get '/get_session_value'
       assert_response :success
       assert_equal 'foo: nil', response.body
+    end
+  end
+
+  def test_record_available_in_env
+    with_test_route_set do
+      get '/set_session_value'
+      record = request.env[record_key]
+
+      assert_equal record.session_id, session.id
+      assert_equal session.to_hash, record.data
+
+      get '/change_session_id'
+      record = request.env[record_key]
+
+      assert_equal record.session_id, session.id
+      assert_equal session.to_hash, record.data
+    end
+  end
+
+  def test_changing_session_id
+    with_test_route_set do
+      session_id = 'id'
+
+      if ActiveRecord::VERSION::MAJOR == 4
+        get '/change_session_id', session_id: session_id
+      else
+        get '/change_session_id', params: { session_id: session_id }
+      end
+      record = request.env[record_key]
+
+      assert_equal record.session_id, session.id
+      assert_equal session.to_hash, record.data
+
+      assert_equal session[:foo], 'bar'
+
+      get '/get_session_value'
+      record = request.env[record_key]
+
+      assert_equal record.session_id, session.id
+      assert_equal session.to_hash, record.data
+
+      assert_equal session_id, session.id
+      assert_equal session[:foo], 'bar'
     end
   end
 
@@ -284,5 +333,11 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       get '/set_session_value'
       assert_response :success
     end
+  end
+
+  private
+
+  def record_key
+    ActionDispatch::Session::ActiveRecordStore::SESSION_RECORD_KEY
   end
 end

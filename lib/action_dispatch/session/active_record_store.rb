@@ -80,7 +80,7 @@ module ActionDispatch
 
       def write_session(request, sid, session_data, options)
         logger.silence_logger do
-          record = get_session_model(request, sid)
+          record = get_session_model(request, sid, false)
           record.data = session_data
           return false unless record.save
 
@@ -91,7 +91,7 @@ module ActionDispatch
             end
           end
 
-          sid
+          record.session_id
         end
       end
 
@@ -112,6 +112,7 @@ module ActionDispatch
             if options[:renew]
               new_model = @@session_class.new(:session_id => new_sid, :data => data)
               new_model.save
+              request.session_options[:id] = new_sid
               request.env[SESSION_RECORD_KEY] = new_model
             end
             new_sid
@@ -119,20 +120,15 @@ module ActionDispatch
         end
       end
 
-      def get_session_model(request, id)
+      def get_session_model(request, id, generate_id = true)
         logger.silence_logger do
           model = @@session_class.find_by_session_id(id)
           if !model
-            id = generate_sid
+            id = generate_sid if generate_id
             model = @@session_class.new(:session_id => id, :data => {})
             model.save
           end
-          if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
-            request.env[SESSION_RECORD_KEY] = model
-          else
-            request.env[SESSION_RECORD_KEY] ||= model
-          end
-          model
+          request.env[SESSION_RECORD_KEY] = model
         end
       end
 
