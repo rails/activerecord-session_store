@@ -3,6 +3,7 @@ nokogiri_ver = RUBY_VERSION < '2.1' ? '1.6' : '1.7'
 
 gem "actionpack", "~> 4.2.0"
 gem "activerecord", "~> 4.2.0"
+gem "nokogiri", "< 1.7" if RUBY_VERSION < "2.1"
 gem "railties", "~> 4.2.0"
 gem 'nokogiri', "~> #{nokogiri_ver}.0"
 
