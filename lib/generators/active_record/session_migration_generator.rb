@@ -20,8 +20,8 @@ module ActiveRecord
           current_table_name
         end
 
-        def active_record_migration_class
-          migration_class = ActiveRecord::VERSION::MAJOR < 5 ? ActiveRecord::Migration : ActiveRecord::Migration[4.2]
+        def migration_version
+          "[#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}]" if ActiveRecord::VERSION::MAJOR >= 5
         end
     end
   end

@@ -8,25 +8,25 @@ class SessionMigrationGeneratorTest < Rails::Generators::TestCase
   destination 'tmp'
   setup :prepare_destination
 
-  def active_record_migration_class
-    active_record_migration_class = ActiveRecord::VERSION::MAJOR < 5 ? ActiveRecord::Migration : ActiveRecord::Migration[4.2]
+  def active_record_version
+    "\\[#{ActiveRecord::VERSION::MAJOR}\\.#{ActiveRecord::VERSION::MINOR}\\]" if ActiveRecord::VERSION::MAJOR >= 5
   end
 
   def test_session_migration_with_default_name
     run_generator
-    assert_migration "db/migrate/add_sessions_table.rb", /class AddSessionsTable < #{active_record_migration_class}/
+    assert_migration "db/migrate/add_sessions_table.rb", /class AddSessionsTable < ActiveRecord::Migration#{active_record_version}/
   end
 
   def test_session_migration_with_given_name
     run_generator ["create_session_table"]
-    assert_migration "db/migrate/create_session_table.rb", /class CreateSessionTable < #{active_record_migration_class}/
+    assert_migration "db/migrate/create_session_table.rb", /class CreateSessionTable < ActiveRecord::Migration#{active_record_version}/
   end
 
   def test_session_migration_with_custom_table_name
     ActiveRecord::SessionStore::Session.table_name = "custom_table_name"
     run_generator
     assert_migration "db/migrate/add_sessions_table.rb" do |migration|
-      assert_match(/class AddSessionsTable < #{active_record_migration_class}/, migration)
+      assert_match(/class AddSessionsTable < ActiveRecord::Migration#{active_record_version}/, migration)
       assert_match(/create_table :custom_table_name/, migration)
     end
   ensure
