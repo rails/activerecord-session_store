@@ -1,4 +1,4 @@
-class <%= migration_class_name %> < ActiveRecord::Migration
+class <%= migration_class_name %> < <%= active_record_migration_class %>
   def change
     create_table :<%= session_table_name %> do |t|
       t.string :session_id, :null => false
