@@ -9,7 +9,7 @@ class SessionMigrationGeneratorTest < Rails::Generators::TestCase
   setup :prepare_destination
 
   def active_record_version
-    "\\[#{ActiveRecord::VERSION::MAJOR}\\.#{ActiveRecord::VERSION::MINOR}\\]" if ActiveRecord::VERSION::MAJOR >= 5
+    "\\[#{ActiveRecord::Migration.current_version}\\]" if ActiveRecord::Migration.respond_to?(:current_version)
   end
 
   def test_session_migration_with_default_name
