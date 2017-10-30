@@ -55,7 +55,9 @@ module ActiveRecord
               class << self; remove_possible_method :find_by_session_id; end
 
               def self.find_by_session_id(session_id)
-                where(session_id: session_id).first
+                query = where(session_id: session_id)
+                query = query.using(:master) if defined?(Octopus).present? && Octopus.enabled?
+                query.first
               end
             end
           end
