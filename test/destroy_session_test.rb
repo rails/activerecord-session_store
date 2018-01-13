@@ -27,7 +27,7 @@ if ActiveRecord::VERSION::MAJOR > 4
           s.destroy
 
           renewed_session_model = req.env[record_key]
-          assert_equal nil, renewed_session_model.data['rails']
+          assert_nil renewed_session_model.data['rails']
         end
 
         def test_destroy_with_renew
