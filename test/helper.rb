@@ -38,10 +38,11 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
 
     def with_test_route_set(options = {})
       controller_namespace = self.class.to_s.underscore
+      actions = %w[set_session_value get_session_value call_reset_session renew get_session_id]
 
       with_routing do |set|
         set.draw do
-          get ':action', :controller => "#{controller_namespace}/test"
+          actions.each { |action| get action, controller: "#{controller_namespace}/test" }
         end
 
         @app = self.class.build_app(set) do |middleware|
