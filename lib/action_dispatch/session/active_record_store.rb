@@ -98,7 +98,7 @@ module ActionDispatch
       def delete_session(request, session_id, options)
         logger.silence_logger do
           if sid = current_session_id(request)
-            if model = get_session_model(request, sid)
+            if model = @@session_class.find_by_session_id(sid)
               data = model.data
               model.destroy
             end
