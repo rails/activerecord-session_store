@@ -19,6 +19,10 @@ module ActiveRecord
           end
           current_table_name
         end
+
+        def migration_version
+          "[#{ActiveRecord::Migration.current_version}]" if ActiveRecord::Migration.respond_to?(:current_version)
+        end
     end
   end
 end
