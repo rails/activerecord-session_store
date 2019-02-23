@@ -38,6 +38,24 @@ been updated in the last 30 days. The 30 days cutoff can be changed using the
 Configuration
 --------------
 
+A cookie is used to identify the appropriate ActiveRecord record.
+By default this cookie is in cleartext.
+You may optionally configure this cookie to be signed or encrypted. For example, at the end of `config/application.rb`:
+
+```ruby
+ActiveRecord::SessionStore::Session.sign_cookie = true
+ActiveRecord::SessionStore::Session.encrypt_cookie = true
+```
+
+Setting these configuration values has the following behaviors:
+
+| `sign_cookie` | `encrypt_cookie` | Behavior         |
+| ------------- | ---------------- | ---------------- |
+| false         | false            | Cleartext cookie |
+| false         | true             | Encrypted cookie |
+| true          | false            | Signed cookie    |
+| true          | true             | Encrypted cookie |
+
 Disable fallback to use insecure session by providing the option
 `secure_session_only` when setting up the session store.
 
