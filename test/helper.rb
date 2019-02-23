@@ -6,6 +6,7 @@ require 'action_dispatch'
 require 'minitest/autorun'
 
 require 'active_record/session_store'
+require 'active_support/messages/rotation_configuration' unless ActiveRecord::VERSION::MAJOR == 4
 
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
 

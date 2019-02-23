@@ -9,6 +9,22 @@ module ActionDispatch
     # provided, but any object duck-typing to an Active Record Session class
     # with text +session_id+ and +data+ attributes is sufficient.
     #
+    # A cookie is used to identify the appropriate ActiveRecord record.
+    # By default this cookie is in cleartext.
+    # You may optionally configure this cookie to be signed or encrypted.
+    # For example, at the end of `config/application.rb`:
+    #
+    # ActiveRecord::SessionStore::Session.sign_cookie = true
+    # ActiveRecord::SessionStore::Session.encrypt_cookie = true
+    #
+    # Setting these configuration values has the following behaviors:
+    # sign_cookie   encrypt_cookie   Behavior
+    # ------------- ---------------- ----------------
+    # false         false            Cleartext cookie
+    # false         true             Encrypted cookie
+    # true          false            Signed cookie
+    # true          true             Encrypted cookie
+    #
     # The default assumes a +sessions+ tables with columns:
     #   +id+ (numeric primary key),
     #   +session_id+ (string, usually varchar; maximum length is 255), and
@@ -75,6 +91,59 @@ module ActionDispatch
           end
           request.env[SESSION_RECORD_KEY] = session
           [sid, session.data]
+        end
+      end
+
+      def cookie_is_signed_or_encrypted?
+        ActiveRecord::SessionStore::Session.sign_cookie || ActiveRecord::SessionStore::Session.encrypt_cookie
+      end
+
+      # Inspired by ActionDispatch::Session::CookieStore
+      # https://github.com/rails/rails/blob/master/actionpack/lib/action_dispatch/middleware/session/cookie_store.rb
+      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractStore)
+      # (noting that ActionDispatch::Session::CookieStore does not currently respect :cookie_only)
+      def extract_session_id(req)
+        sid = stale_session_check! do
+          unpacked_cookie_data(req)
+        end
+
+        # Inspired by Rack::Session::Abstract::Persisted
+        # https://github.com/rack/rack/blob/master/lib/rack/session/abstract/id.rb
+        sid ||= req.params[@key] unless @cookie_only
+        sid
+      end
+
+      # Inspired by ActionDispatch::Session::CookieStore
+      # https://github.com/rails/rails/blob/master/actionpack/lib/action_dispatch/middleware/session/cookie_store.rb
+      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractStore)
+      def unpacked_cookie_data(req)
+
+        req.fetch_header("action_dispatch.request.unsigned_session_cookie") do |k|
+          v = stale_session_check! do
+            get_cookie(req) || nil  # not empty string
+          end
+          req.set_header k, v
+        end
+      end
+
+      # Duplicated from ActionDispatch::Session::CookieStore
+      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractStore)
+      def set_cookie(request, session_id, cookie)
+        cookie_jar(request)[@key] = cookie
+      end
+
+      # Duplicated from ActionDispatch::Session::CookieStore
+      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractStore)
+      def get_cookie(req)
+        cookie_jar(req)[@key]
+      end
+
+      # Inspired from ActionDispatch::Session::CookieStore
+      def cookie_jar(request)
+        if cookie_is_signed_or_encrypted?
+          request.cookie_jar.signed_or_encrypted
+        else
+          request.cookie_jar
         end
       end
 

@@ -1,6 +1,30 @@
 require 'helper'
 
 class ActionControllerTest < ActionDispatch::IntegrationTest
+  SessionKey    = "_session_id"
+  SessionSecret = "b3c631c314c0bbca50c1b2843150fe33"
+  SessionSalt   = "signed or encrypted cookie"
+
+  if ActiveRecord::VERSION::MAJOR == 4
+    Generator = ActiveSupport::KeyGenerator.new(SessionSecret)
+
+    Verifier = ActiveSupport::MessageVerifier.new(Generator.generate_key(SessionSalt), :digest => 'SHA1')
+
+    Encryptor = ActiveSupport::MessageEncryptor.new(Generator.generate_key(SessionSalt, 32), Generator.generate_key(SessionSalt))
+
+  else
+    Generator = ActiveSupport::KeyGenerator.new(SessionSecret, iterations: 1000)
+    Rotations = ActiveSupport::Messages::RotationConfiguration.new
+
+    Verifier = ActiveSupport::MessageVerifier.new(
+      Generator.generate_key(SessionSalt), serializer: Marshal
+    )
+
+    Encryptor = ActiveSupport::MessageEncryptor.new(
+      Generator.generate_key(SessionSalt, 32), cipher: "aes-256-gcm", serializer: Marshal
+    )
+  end
+
   class TestController < ActionController::Base
     protect_from_forgery
     def no_session_access
@@ -46,6 +70,9 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
   def setup
     ActionDispatch::Session::ActiveRecordStore.session_class.drop_table! rescue nil
     ActionDispatch::Session::ActiveRecordStore.session_class.create_table!
+
+    ActiveRecord::SessionStore::Session.sign_cookie = false
+    ActiveRecord::SessionStore::Session.encrypt_cookie = false
   end
 
   %w{ session sql_bypass }.each do |class_name|
@@ -179,6 +206,84 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_signed_cookie
+    ActiveRecord::SessionStore::Session.sign_cookie = true
+    with_test_route_set do
+      get '/set_session_value'
+      assert_response :success
+      assert cookies['_session_id']
+      session_id_signed = cookies['_session_id']
+
+      if ActiveRecord::VERSION::MAJOR == 4
+        session_id, time = Verifier.verify(session_id_signed) rescue nil
+        time = time  # Suppress "warning: assigned but unused variable - time"
+      else
+        session_id = Verifier.verified(session_id_signed) rescue nil
+      end
+
+      get '/get_session_id'
+      assert_response :success
+      assert_equal session_id, response.body, "should be able to read signed session id"
+    end
+  end
+
+  def test_encrypted_cookie
+    ActiveRecord::SessionStore::Session.encrypt_cookie = true
+    with_test_route_set do
+      get '/set_session_value'
+      assert_response :success
+      assert cookies['_session_id']
+      session_id_encrypted = cookies['_session_id']
+      session_id = Encryptor.decrypt_and_verify(session_id_encrypted) rescue nil
+
+      get '/get_session_id'
+      assert_response :success
+      assert_equal session_id, response.body, "should be able to read encrypted session id"
+    end
+  end
+
+  # From https://github.com/rails/rails/blob/master/actionpack/test/dispatch/session/cookie_store_test.rb
+  def test_signed_cookie_disregards_tampered_sessions
+    ActiveRecord::SessionStore::Session.sign_cookie = true
+    with_test_route_set do
+      bad_key = Generator.generate_key(SessionSalt).reverse
+
+      if ActiveRecord::VERSION::MAJOR == 4
+        verifier = ActiveSupport::MessageVerifier.new(bad_key, :digest => 'SHA1')
+      else
+        verifier = ActiveSupport::MessageVerifier.new(bad_key, serializer: Marshal)
+      end
+
+      cookies[SessionKey] = verifier.generate("foo" => "bar", "session_id" => "abc")
+
+      get "/get_session_value"
+
+      assert_response :success
+      assert_equal "foo: nil", response.body
+    end
+  end
+
+  # From https://github.com/rails/rails/blob/master/actionpack/test/dispatch/session/cookie_store_test.rb
+  def test_encrypted_cookie_disregards_tampered_sessions
+    ActiveRecord::SessionStore::Session.encrypt_cookie = true
+    with_test_route_set do
+
+      if ActiveRecord::VERSION::MAJOR == 4
+        bad_sign_secret = Generator.generate_key(SessionSalt).reverse
+        encryptor = ActiveSupport::MessageEncryptor.new(Generator.generate_key(SessionSalt, 32), bad_sign_secret)
+      else
+        encryptor = ActiveSupport::MessageEncryptor.new("A" * 32, cipher: "aes-256-gcm", serializer: Marshal)
+      end
+
+      cookies[SessionKey] = encryptor.encrypt_and_sign("foo" => "bar", "session_id" => "abc")
+
+      get "/get_session_value"
+
+      assert_response :success
+      assert_equal "foo: nil", response.body
+    end
+  end
+
   def test_doesnt_write_session_cookie_if_session_id_is_already_exists
     with_test_route_set do
       get '/set_session_value'
@@ -285,4 +390,60 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
     end
   end
+
+  private
+
+    if ActiveRecord::VERSION::MAJOR == 4
+      # Overwrite get to send SessionSecret in env hash
+      # Inspired by https://github.com/rails/rails/blob/6b9a1ac484a4eda1b43aba7ed864952aac743ab9/actionpack/test/dispatch/session/cookie_store_test.rb
+      def get(path, parameters = nil, env = {})
+        signed = ActiveRecord::SessionStore::Session.sign_cookie
+        encrypted = ActiveRecord::SessionStore::Session.encrypt_cookie
+
+        if signed || encrypted
+          env["action_dispatch.key_generator"] ||= Generator
+        end
+
+        if signed && ! encrypted
+          env["action_dispatch.signed_cookie_salt"] = SessionSalt
+
+        elsif encrypted
+          env["action_dispatch.encrypted_cookie_salt"] = SessionSalt
+          env["action_dispatch.encrypted_signed_cookie_salt"] = SessionSalt
+          env["action_dispatch.secret_key_base"] = SessionSecret
+        end
+
+        super
+      end
+
+    else
+      # Overwrite get to send SessionSecret in env hash
+      # Inspired by https://github.com/rails/rails/blob/master/actionpack/test/dispatch/session/cookie_store_test.rb
+      def get(path, *args)
+        args[0] ||= {}
+        args[0][:headers] ||= {}
+        args[0][:headers].tap do |config|
+          signed = ActiveRecord::SessionStore::Session.sign_cookie
+          encrypted = ActiveRecord::SessionStore::Session.encrypt_cookie
+
+          if signed || encrypted
+            config["action_dispatch.key_generator"] ||= Generator
+            config["action_dispatch.cookies_rotations"] ||= Rotations unless ActiveRecord::VERSION::MAJOR == 4
+          end
+
+          if signed && ! encrypted
+            config["action_dispatch.signed_cookie_salt"] = SessionSalt
+
+          elsif encrypted
+            config["action_dispatch.authenticated_encrypted_cookie_salt"] = SessionSalt
+            config["action_dispatch.secret_key_base"] = SessionSecret
+            config["action_dispatch.use_authenticated_cookie_encryption"] = true
+          end
+
+        end
+
+        super(path, *args)
+      end
+    end
+
 end

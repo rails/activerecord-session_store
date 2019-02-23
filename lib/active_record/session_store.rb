@@ -8,7 +8,9 @@ require 'multi_json'
 module ActiveRecord
   module SessionStore
     module ClassMethods # :nodoc:
+      mattr_accessor :encrypt_cookie
       mattr_accessor :serializer
+      mattr_accessor :sign_cookie
 
       def serialize(data)
         serializer_class.dump(data) if data
