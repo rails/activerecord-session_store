@@ -25,6 +25,6 @@ Gem::Specification.new do |s|
   s.add_dependency('rack', '>= 1.5.2', '< 3')
   s.add_dependency('multi_json', '~> 1.11', '>= 1.11.2')
 
-  s.add_development_dependency('sqlite3', '~> 1.3.6')  # match activerecord dependency
+  s.add_development_dependency('sqlite3')
   s.add_development_dependency('appraisal', '~> 2.1.0')
 end
