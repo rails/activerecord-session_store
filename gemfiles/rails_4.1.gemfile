@@ -5,5 +5,6 @@ gem "actionpack", "~> 4.1.0"
 gem "activerecord", "~> 4.1.0"
 gem "railties", "~> 4.1.0"
 gem 'nokogiri', "~> #{nokogiri_ver}.0"
+gem "sqlite3", "~> 1.3.6"
 
 gemspec :path => "../"
