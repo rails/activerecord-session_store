@@ -14,15 +14,23 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
 
   else
     Generator = ActiveSupport::KeyGenerator.new(SessionSecret, iterations: 1000)
-    Rotations = ActiveSupport::Messages::RotationConfiguration.new
+    Rotations = ActiveSupport::Messages::RotationConfiguration.new unless ActiveRecord::VERSION::STRING < '5.2'
 
     Verifier = ActiveSupport::MessageVerifier.new(
       Generator.generate_key(SessionSalt), serializer: Marshal
     )
 
-    Encryptor = ActiveSupport::MessageEncryptor.new(
-      Generator.generate_key(SessionSalt, 32), cipher: "aes-256-gcm", serializer: Marshal
-    )
+    Cipher = (ActiveRecord::VERSION::STRING < '5.2' ? "aes-256-cbc" : "aes-256-gcm")  # Rails < 5.2 must use non-AEAD aes-256-cbc
+
+    if ActiveRecord::VERSION::STRING < '5.2' || Cipher != "aes-256-gcm"
+      Encryptor = ActiveSupport::MessageEncryptor.new(
+        Generator.generate_key(SessionSalt, 32), Generator.generate_key(SessionSalt), cipher: Cipher, serializer: Marshal
+      )
+    else
+      Encryptor = ActiveSupport::MessageEncryptor.new(
+        Generator.generate_key(SessionSalt, 32), cipher: Cipher, serializer: Marshal
+      )
+    end
   end
 
   class TestController < ActionController::Base
@@ -272,7 +280,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
         bad_sign_secret = Generator.generate_key(SessionSalt).reverse
         encryptor = ActiveSupport::MessageEncryptor.new(Generator.generate_key(SessionSalt, 32), bad_sign_secret)
       else
-        encryptor = ActiveSupport::MessageEncryptor.new("A" * 32, cipher: "aes-256-gcm", serializer: Marshal)
+        encryptor = ActiveSupport::MessageEncryptor.new("A" * 32, cipher: Cipher, serializer: Marshal)
       end
 
       cookies[SessionKey] = encryptor.encrypt_and_sign("foo" => "bar", "session_id" => "abc")
@@ -425,19 +433,37 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
         args[0][:headers].tap do |config|
           signed = ActiveRecord::SessionStore::Session.sign_cookie
           encrypted = ActiveRecord::SessionStore::Session.encrypt_cookie
+          aead_mode = (Cipher == "aes-256-gcm")
 
           if signed || encrypted
             config["action_dispatch.key_generator"] ||= Generator
-            config["action_dispatch.cookies_rotations"] ||= Rotations unless ActiveRecord::VERSION::MAJOR == 4
+            config["action_dispatch.cookies_rotations"] ||= Rotations unless ActiveRecord::VERSION::STRING < '5.2'
           end
 
           if signed && ! encrypted
             config["action_dispatch.signed_cookie_salt"] = SessionSalt
 
           elsif encrypted
-            config["action_dispatch.authenticated_encrypted_cookie_salt"] = SessionSalt
             config["action_dispatch.secret_key_base"] = SessionSecret
-            config["action_dispatch.use_authenticated_cookie_encryption"] = true
+
+            if ActiveRecord::VERSION::STRING < '5.2'
+              config["action_dispatch.encrypted_cookie_salt"] = SessionSalt
+              config["action_dispatch.encrypted_signed_cookie_salt"] = SessionSalt
+
+            else
+              config["action_dispatch.encrypted_cookie_cipher"] = Cipher
+
+              if aead_mode
+                config["action_dispatch.authenticated_encrypted_cookie_salt"] = SessionSalt
+                config["action_dispatch.use_authenticated_cookie_encryption"] = true
+
+              else
+                config["action_dispatch.encrypted_cookie_salt"] = SessionSalt
+                config["action_dispatch.encrypted_signed_cookie_salt"] = SessionSalt
+                config["action_dispatch.use_authenticated_cookie_encryption"] = false
+              end
+
+            end
           end
 
         end
