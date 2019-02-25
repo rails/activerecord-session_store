@@ -26,5 +26,4 @@ Gem::Specification.new do |s|
   s.add_dependency('multi_json', '~> 1.11', '>= 1.11.2')
 
   s.add_development_dependency('sqlite3')
-  s.add_development_dependency('appraisal', '~> 2.1.0')
 end
