@@ -16,6 +16,9 @@ module ActiveRecord
         assert Session.table_exists?
         SqlBypass.drop_table!
         assert !Session.table_exists?
+
+        ActiveRecord::SessionStore::Session.sign_cookie = false
+        ActiveRecord::SessionStore::Session.encrypt_cookie = false
       end
 
       def test_new_record?

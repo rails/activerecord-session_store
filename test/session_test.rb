@@ -14,6 +14,9 @@ module ActiveRecord
         Session.drop_table! if Session.table_exists?
         @session_klass = Class.new(Session)
         ActiveRecord::SessionStore::Session.serializer = :json
+
+        ActiveRecord::SessionStore::Session.sign_cookie = false
+        ActiveRecord::SessionStore::Session.encrypt_cookie = false
       end
 
       def test_data_column_name
