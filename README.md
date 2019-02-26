@@ -48,6 +48,7 @@ ActiveRecord::SessionStore::Session.encrypt_cookie = true
 ```
 
 Setting these configuration values has the following behaviors:
+
 | `sign_cookie` | `encrypt_cookie` | Behavior         |
 | ------------- | ---------------- | ---------------- |
 | false         | false            | Cleartext cookie |
