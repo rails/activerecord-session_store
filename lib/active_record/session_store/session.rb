@@ -103,3 +103,5 @@ module ActiveRecord
     end
   end
 end
+
+ActionDispatch::Session::ActiveRecordStore.session_class = ActiveRecord::SessionStore::Session
