@@ -35,6 +35,18 @@ Running `bin/rake db:sessions:trim` will delete all sessions that have not
 been updated in the last 30 days. The 30 days cutoff can be changed using the
 `SESSION_DAYS_TRIM_THRESHOLD` environment variable.
 
+Rails 5.2+ only Compatible with 1.1.3
+-------------------------------------
+
+Sometimes on newer Rails apps bundler may pick up version 1.1.1 or 1.1.2 of this gem. 
+Unfortunately these versions do not work with the newer ActiveRecord migration pattern, 
+so after installing be sure to check your `Gemfile.lock` to make sure you have the latest version. 
+Try `bundle update activerecord-session_store` or fix the gem to the right version in 
+you Gemfile lock with:
+
+`gem 'activerecord-session_store', '1.1.3'`
+ 
+
 Configuration
 --------------
 
