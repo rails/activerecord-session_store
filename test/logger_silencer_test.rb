@@ -10,11 +10,7 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
     end
 
     def get_session_value
-      if ActiveRecord::VERSION::MAJOR == 4
-        render :text => "foo: #{session[:foo].inspect}"
-      else
-        render :plain => "foo: #{session[:foo].inspect}"
-      end
+      render :plain => "foo: #{session[:foo].inspect}"
     end
   end
 

@@ -76,6 +76,4 @@ class RoutedRackApp
   end
 end
 
-if ActiveSupport::TestCase.respond_to?(:test_order=)
-  ActiveSupport::TestCase.test_order = :random
-end
+ActiveSupport::TestCase.test_order = :random
