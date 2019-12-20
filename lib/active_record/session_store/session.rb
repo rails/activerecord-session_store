@@ -38,8 +38,8 @@ module ActiveRecord
             # Reset column info since it may be stale.
             reset_column_information
             if columns_hash['sessid']
-              def self.find_by_session_id(*args)
-                find_by_sessid(*args)
+              def self.find_by_session_id(session_id)
+                find_by_sessid(session_id)
               end
 
               define_method(:session_id)  { sessid }
@@ -69,6 +69,21 @@ module ActiveRecord
       # Has the session been loaded yet?
       def loaded?
         @data
+      end
+
+      def secure!
+        session_id_column = if self.class.columns_hash['sessid']
+          :sessid
+        else
+          :session_id
+        end
+        raw_session_id = read_attribute(session_id_column)
+        if ActionDispatch::Session::ActiveRecordStore.private_session_id?(raw_session_id)
+          # is already private, nothing to do
+        else
+          session_id_object = Rack::Session::SessionId.new(raw_session_id)
+          update_column(session_id_column, session_id_object.private_id)
+        end
       end
 
       private
