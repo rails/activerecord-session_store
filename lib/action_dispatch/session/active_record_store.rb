@@ -134,9 +134,11 @@ module ActionDispatch
 
       def get_session_with_fallback(sid)
         if sid && !self.class.private_session_id?(sid.public_id)
-          if (session = @@session_class.find_by_session_id(sid.private_id) || @@session_class.find_by_session_id(sid.public_id))
-            session.session_id = sid.private_id
-            session
+          if (secure_session = @@session_class.find_by_session_id(sid.private_id))
+            secure_session
+          elsif (insecure_session = @@session_class.find_by_session_id(sid.public_id))
+            insecure_session.session_id = sid.private_id # this causes the session to be secured
+            insecure_session
           end
         end
       end
