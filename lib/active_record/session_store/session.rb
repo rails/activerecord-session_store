@@ -71,6 +71,12 @@ module ActiveRecord
         @data
       end
 
+      # This method was introduced when addressing CVE-2019-16782
+      # (see https://github.com/rack/rack/security/advisories/GHSA-hrqr-hxpp-chr3).
+      # Sessions created on version <= 1.1.3 were guessable via a timing attack.
+      # To secure sessions created on those old versions, this method can be called
+      # on all existing sessions in the database. Users will not lose their session
+      # when this is done.
       def secure!
         session_id_column = if self.class.columns_hash['sessid']
           :sessid
