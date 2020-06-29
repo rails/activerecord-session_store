@@ -1,7 +1,6 @@
 require 'active_record'
 require 'active_record/session_store/version'
 require 'action_dispatch/session/active_record_store'
-require "active_record/session_store/extension/logger_silencer"
 require 'active_support/core_ext/hash/keys'
 require 'multi_json'
 
@@ -109,10 +108,3 @@ end
 
 require 'active_record/session_store/sql_bypass'
 require 'active_record/session_store/railtie' if defined?(Rails)
-
-Logger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
-
-begin
-  require "syslog/logger"
-  Syslog::Logger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
-rescue LoadError; end
