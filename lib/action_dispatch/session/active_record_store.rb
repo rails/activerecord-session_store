@@ -117,6 +117,10 @@ module ActionDispatch
 
       def get_session_model(request, id)
         logger.silence do
+          if (model = request.env[SESSION_RECORD_KEY]) && model.session_id == id
+            return model
+          end
+
           model = @@session_class.find_by_session_id(id)
           if !model
             id = generate_sid
@@ -149,4 +153,3 @@ module ActionDispatch
     end
   end
 end
-
