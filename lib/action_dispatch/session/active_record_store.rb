@@ -117,7 +117,7 @@ module ActionDispatch
 
       def get_session_model(request, id)
         logger.silence do
-          model = @@session_class.find_by_session_id(id)
+          model = id && @@session_class.find_by_session_id(id)
           if !model
             id = generate_sid
             model = @@session_class.new(:session_id => id, :data => {})
@@ -149,4 +149,3 @@ module ActionDispatch
     end
   end
 end
-
