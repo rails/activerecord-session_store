@@ -60,6 +60,7 @@ module ActionDispatch
       DEFAULT_SAME_SITE = proc { |request| request.cookies_same_site_protection } # :nodoc:
       ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
       SESSION_RECORD_KEY = "rack.session.record"
+      SESSION_RECORD_CREATED_KEY = "rack.session.record.created"
 
       def initialize(app, options = {})
         @secure_session_only = options.delete(:secure_session_only) { false }
@@ -124,19 +125,40 @@ module ActionDispatch
 
       def get_session_model(request, id)
         logger.silence do
-          model = get_session_with_fallback(id)
-          unless model
-            id = generate_sid
-            model = session_class.new(:session_id => id.private_id, :data => {})
-            model.save
-          end
-          if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
-            request.env[SESSION_RECORD_KEY] = model
+          if can_reuse_session_record?(request, id)
+            model = request.env[SESSION_RECORD_KEY]
           else
-            request.env[SESSION_RECORD_KEY] ||= model
+            model = get_session_with_fallback(id)
+
+            new_record = false
+
+            unless model
+              id = generate_sid
+              model = session_class.new(:session_id => id.private_id, :data => {})
+              model.save
+              new_record = true
+            end
+
+            if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
+              request.env[SESSION_RECORD_KEY] = model
+              request.env[SESSION_RECORD_CREATED_KEY] = new_record
+            else
+              unless request.env[SESSION_RECORD_KEY]
+                request.env[SESSION_RECORD_KEY] = model
+                request.env[SESSION_RECORD_CREATED_KEY] = new_record
+              end
+            end
           end
+
           [model, id]
         end
+      end
+
+      def can_reuse_session_record?(request, id)
+        id &&
+          !request.env[SESSION_RECORD_CREATED_KEY] &&
+          (model = request.env[SESSION_RECORD_KEY]) &&
+          model.session_id == id.private_id
       end
 
       def get_session_with_fallback(sid)

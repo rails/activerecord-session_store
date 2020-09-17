@@ -104,6 +104,14 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
       ActionDispatch::Session::ActiveRecordStore.session_class = session_class
     end
 
+    def with_session_class(new_session_class)
+      session_class, ActionDispatch::Session::ActiveRecordStore.session_class =
+        ActionDispatch::Session::ActiveRecordStore.session_class, new_session_class
+      yield
+    ensure
+      ActionDispatch::Session::ActiveRecordStore.session_class = session_class
+    end
+
     # Patch in support for with_routing for integration tests, which was
     # introduced in Rails 7.2, but improved in Rails 8.0 to better handle
     # middleware. See: https://github.com/rails/rails/pull/54705
