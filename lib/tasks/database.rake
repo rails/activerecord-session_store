@@ -15,8 +15,6 @@ namespace 'db:sessions' do
   task :trim => [:environment, 'db:load_config'] do
     cutoff_period = (ENV['SESSION_DAYS_TRIM_THRESHOLD'] || 30).to_i.days.ago
     query = ActiveRecord::SessionStore::Session.where("updated_at < ?", cutoff_period)
-    query.in_batches do |relation|
-        relation.delete_all
-    end
+    query.in_batches.delete_all
   end
 end
