@@ -35,6 +35,22 @@ Running `bin/rake db:sessions:trim` will delete all sessions that have not
 been updated in the last 30 days. The 30 days cutoff can be changed using the
 `SESSION_DAYS_TRIM_THRESHOLD` environment variable.
 
+In Rails 6.1 and above, If you need to specify which database to use for sessions, you can do something like this:
+
+```ruby
+class AppSessionBase < ActiveRecord::SessionStore::Session
+  self.abstract_class = true
+
+  connects_to database: { reading: :session_primary, writing: :session_primary }
+end
+
+class AppSession < AppSessionBase
+  # needed b/c AppSessionBase is "abstract and cannot be instantiated"
+end
+
+ActionDispatch::Session::ActiveRecordStore.session_class = AppSession
+```
+
 Configuration
 --------------
 
