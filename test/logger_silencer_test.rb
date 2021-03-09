@@ -37,24 +37,12 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
   end
 
   def test_log_silencer_with_logger_not_raise_exception
-    with_logger Logger.new(Tempfile.new("tempfile")) do
+    with_logger ActiveSupport::Logger.new(Tempfile.new("tempfile")) do
       with_test_route_set do
         get "/set_session_value"
       end
     end
   end
-
-  begin
-    require "syslogger/logger"
-
-    def test_log_silencer_with_syslog_logger_not_raise_exception
-      with_logger Syslog::Logger.new("ar_session_store_test") do
-        with_test_route_set do
-          get "/set_session_value"
-        end
-      end
-    end
-  rescue LoadError; end
 
   private
 
@@ -67,7 +55,7 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
     end
 
     def with_fake_logger(&block)
-      with_logger(Logger.new(fake_logger), &block)
+      with_logger(ActiveSupport::Logger.new(fake_logger), &block)
     end
 
     def fake_logger
