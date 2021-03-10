@@ -109,7 +109,7 @@ MyLogger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
 This silencer is being used to silence the logger and not leaking private
 information into the log, and it is required for security reason.
 
-CVE-2015-9284 mitigation
+CVE-2019-25025 mitigation
 --------------
 
 Sessions that were created by Active Record Session Store version 1.x are
