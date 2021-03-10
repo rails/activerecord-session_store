@@ -52,6 +52,17 @@ module ActiveRecord
         assert_equal 0, old_session_count
         assert_equal retained_session, recent_session
       end
+
+      def test_upgrade_task
+        Session.create!(session_id: "original_session_id", data: "data")
+        Session.create!(session_id: "2::secure_session_id", data: "data")
+
+        Rake.application.invoke_task 'db:sessions:upgrade'
+
+        assert_nil Session.find_by_session_id("original_session_id")
+        assert Session.find_by_session_id(Rack::Session::SessionId.new("original_session_id").private_id)
+        assert Session.find_by_session_id("2::secure_session_id")
+      end
     end
   end
 end

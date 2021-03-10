@@ -18,4 +18,9 @@ namespace 'db:sessions' do
       where("updated_at < ?", cutoff_period).
       delete_all
   end
+
+  desc "Upgrade current sessions in the database to the secure version"
+  task :upgrade => [:environment, 'db:load_config'] do
+    ActionDispatch::Session::ActiveRecordStore.session_class.find_each(&:secure!)
+  end
 end

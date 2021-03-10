@@ -112,43 +112,27 @@ information into the log, and it is required for security reason.
 CVE-2015-9284 mitigation
 --------------
 
-Active Record Session Store version 1.x and are affected by [CVE-2019-25025].
-This means an attacker can perform a timing attack against the session IDs
-stored in the database. This issue was resolved in version 2.0.0 thanks to
-[#151]. The fix contains a backwards compatibilty fallback that migrates
-affected sessions whenever they are used successfully.
+Sessions that were created by Active Record Session Store version 1.x are
+affected by [CVE-2019-25025]. This means an attacker can perform a timing
+attack against the session IDs stored in the database.
 
 [CVE-2019-25025]: https://github.com/advisories/GHSA-cvw2-xj8r-mjf7
-[#151]: https://github.com/rails/activerecord-session_store/pull/151
 
-However, as long those sessions exist in your database you are still affected
-by the security issue. Therefore it is strongly recommended not to rely on the
-fallback but to actively migrate the insecurely stored session IDs by calling
-the `#secure!` method on all sessions.
+After upgrade to version 2.0.0, you should run [`db:sessions:upgrade`] rake task
+to upgrade all existing session records in your database to the secured version.
 
-Please be aware that you need to copy/adapt this method if you're using a
-custom class for storing your sessions (as described earlier in the
-`Configuration` part of this `README`).
+[`db:sessions:upgrade`]: https://github.com/rails/activerecord-session_store/blob/master/lib/tasks/database.rake#L22
 
-The following example Active Record Migration will work for the default setup
-of this gem:
-
-```ruby
-# db/migrate/20210310083511_cve201925025_mitigation.rb
-class Cve201925025Mitigation < ActiveRecord::Migration[5.2]
-  def up
-    ActionDispatch::Session::ActiveRecordStore.session_class.find_each(&:secure!)
-  end
-
-  def down
-    # no-op
-  end
-end
+```console
+$ rake db:sessions:upgrade
 ```
 
-After `rails db:migrate` is performed, the session IDs are stored in the
-securely hashed format provided by `Rack::Session::SessionId` and no longer
-vulnerable to CVE-2019-25025.
+This rake task is idempotent and can be run multiple times, and session data of
+users will remain intact.
+
+Please see [#151] for more details.
+
+[#151]: https://github.com/rails/activerecord-session_store/pull/151
 
 Contributing to Active Record Session Store
 --------------
