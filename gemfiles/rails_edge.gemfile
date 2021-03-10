@@ -1,12 +1,11 @@
 source "https://rubygems.org"
 
-git "https://github.com/rails/rails.git", :branch => "master" do
+git "https://github.com/rails/rails.git", :branch => "main" do
   gem "actionpack"
   gem "activerecord"
   gem "railties"
 end
 
 gem "rack", :git => "https://github.com/rack/rack.git", :branch => "master"
-gem "arel", :git => "https://github.com/rails/arel.git", :branch => "master"
 
 gemspec :path => "../"
