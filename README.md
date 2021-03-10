@@ -119,8 +119,12 @@ The following example Active Record Migration will work for the default setup of
 ```ruby
 # db/migrate/20210310083511_cve201925025_mitigation.rb
 class Cve201925025Mitigation < ActiveRecord::Migration[5.2]
-  def change
+  def up
     ActionDispatch::Session::ActiveRecordStore.session_class.find_each(&:secure!)
+  end
+
+  def down
+    # no-op
   end
 end
 ```
