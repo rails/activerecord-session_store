@@ -109,7 +109,30 @@ MyLogger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
 This silencer is being used to silence the logger and not leaking private
 information into the log, and it is required for security reason.
 
-## Contributing to Active Record Session Store
+CVE-2015-9284 mitigation
+--------------
+
+Active Record Session Store in version 1.1.3 and below are affected by [CVE-2019-25025](https://github.com/advisories/GHSA-cvw2-xj8r-mjf7). This means an attacker can perform a timing attack against the session IDs stored in the database. This issue was resolved with `activerecord-session_store` version 1.1.4 thanks to [PR 151](https://github.com/rails/activerecord-session_store/pull/151). The fix contains a backwards compatibilty fallback that migrates affected sessions whenever they are used successfully.
+However, as long those sessions exist in your database you are still affected by the security issue. Therefore it is strongly recommended not to rely on the fallback but to actively migrate the insecurely stored session IDs by calling the `#secure!` method on all sessions (see below for an example migration). Please be aware that you need to copy/adapt this method if you're using a custom class for storing your sessions (as described earlier in the `Configuration` part of this `README`).
+The following example Active Record Migration will work for the default setup of this gem:
+
+```ruby
+# db/migrate/20210310083511_cve201925025_mitigation.rb
+class Cve201925025Mitigation < ActiveRecord::Migration[5.2]
+  def up
+    ActionDispatch::Session::ActiveRecordStore.session_class.find_each(&:secure!)
+  end
+
+  def down
+    # no-op
+  end
+end
+```
+
+After `rails db:migrate` is performed the session IDs are stored in the securely hashed format provided by `Rack::Session::SessionId`. The system is no longer affected by CVE-2015-9284.
+
+Contributing to Active Record Session Store
+--------------
 
 Active Record Session Store is work of many contributors. You're encouraged to submit pull requests, propose features and discuss issues.
 
