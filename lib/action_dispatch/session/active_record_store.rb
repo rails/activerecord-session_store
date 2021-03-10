@@ -52,7 +52,7 @@ module ActionDispatch
     #
     # The example SqlBypass class is a generic SQL session store. You may
     # use it as a basis for high-performance database-specific stores.
-    class ActiveRecordStore < ActionDispatch::Session::AbstractStore
+    class ActiveRecordStore < ActionDispatch::Session::AbstractSecureStore
       # The class used for session storage. Defaults to
       # ActiveRecord::SessionStore::Session
       cattr_accessor :session_class
@@ -63,11 +63,11 @@ module ActionDispatch
     private
       def get_session(request, sid)
         logger.silence do
-          unless sid and session = @@session_class.find_by_session_id(sid)
+          unless sid and session = get_session_with_fallback(sid)
             # If the sid was nil or if there is no pre-existing session under the sid,
             # force the generation of a new sid and associate a new session associated with the new sid
             sid = generate_sid
-            session = @@session_class.new(:session_id => sid, :data => {})
+            session = @@session_class.new(:session_id => sid.private_id, :data => {})
           end
           request.env[SESSION_RECORD_KEY] = session
           [sid, session.data]
@@ -76,7 +76,7 @@ module ActionDispatch
 
       def write_session(request, sid, session_data, options)
         logger.silence do
-          record = get_session_model(request, sid)
+          record, sid = get_session_model(request, sid)
           record.data = session_data
           return false unless record.save
 
@@ -94,7 +94,7 @@ module ActionDispatch
       def delete_session(request, session_id, options)
         logger.silence do
           if sid = current_session_id(request)
-            if model = @@session_class.find_by_session_id(sid)
+            if model = get_session_with_fallback(sid)
               data = model.data
               model.destroy
             end
@@ -106,7 +106,7 @@ module ActionDispatch
             new_sid = generate_sid
 
             if options[:renew]
-              new_model = @@session_class.new(:session_id => new_sid, :data => data)
+              new_model = @@session_class.new(:session_id => new_sid.private_id, :data => data)
               new_model.save
               request.env[SESSION_RECORD_KEY] = new_model
             end
@@ -117,10 +117,10 @@ module ActionDispatch
 
       def get_session_model(request, id)
         logger.silence do
-          model = @@session_class.find_by_session_id(id)
-          if !model
+          model = get_session_with_fallback(id)
+          unless model
             id = generate_sid
-            model = @@session_class.new(:session_id => id, :data => {})
+            model = @@session_class.new(:session_id => id.private_id, :data => {})
             model.save
           end
           if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
@@ -128,13 +128,24 @@ module ActionDispatch
           else
             request.env[SESSION_RECORD_KEY] ||= model
           end
-          model
+          [model, id]
+        end
+      end
+
+      def get_session_with_fallback(sid)
+        if sid && !self.class.private_session_id?(sid.public_id)
+          if (secure_session = @@session_class.find_by_session_id(sid.private_id))
+            secure_session
+          elsif (insecure_session = @@session_class.find_by_session_id(sid.public_id))
+            insecure_session.session_id = sid.private_id # this causes the session to be secured
+            insecure_session
+          end
         end
       end
 
       def find_session(request, id)
-        model = get_session_model(request, id)
-        [model.session_id, model.data]
+        model, id = get_session_model(request, id)
+        [id, model.data]
       end
 
       module NilLogger
@@ -146,7 +157,12 @@ module ActionDispatch
       def logger
         ActiveRecord::Base.logger || NilLogger
       end
+
+      def self.private_session_id?(session_id)
+        # user tried to retrieve a session by a private key?
+        session_id =~ /\A\d+::/
+      end
+
     end
   end
 end
-

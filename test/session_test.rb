@@ -123,6 +123,64 @@ module ActiveRecord
         s = Session.new
         assert !s.loaded?, 'session is not loaded'
       end
+
+      def test_session_can_be_secured
+        Session.create_table!
+        session_id = 'unsecure'
+        session = session_klass.create!(:data => 'world', :session_id => 'foo')
+        session.update_column(:session_id, session_id)
+
+        assert_equal 'unsecure', session.read_attribute(:session_id)
+
+        session.secure!
+
+        secured = Rack::Session::SessionId.new(session_id).private_id
+        assert_equal secured, session.reload.read_attribute(:session_id)
+      end
+
+      def test_session_can_be_secured_with_sessid_compatibility
+       # Force class reload, as we need to redo the meta-programming
+        ActiveRecord::SessionStore.send(:remove_const, :Session)
+        load 'active_record/session_store/session.rb'
+
+        Session.reset_column_information
+        klass = Class.new(Session) do
+          def self.session_id_column
+            'sessid'
+          end
+        end
+        klass.create_table!
+        session_id = 'unsecure'
+        session = klass.create!(:data => 'world', :sessid => 'foo')
+        session.update_column(:sessid, session_id)
+
+        assert_equal 'unsecure', session.read_attribute(:sessid)
+
+        session.secure!
+
+        secured = Rack::Session::SessionId.new(session_id).private_id
+        assert_equal secured, session.reload.read_attribute(:sessid)
+      ensure
+        klass.drop_table!
+        Session.reset_column_information
+      end
+
+      def test_secure_is_idempotent
+        Session.create_table!
+        session_id = 'unsecure'
+        session = session_klass.create!(:data => 'world', :session_id => 'foo')
+        session.update_column(:session_id, session_id)
+
+        assert_equal 'unsecure', session.read_attribute(:session_id)
+
+        session.secure!
+        private_id = session.read_attribute(:session_id)
+        session.secure!
+        session.reload
+        session.secure!
+
+        assert_equal private_id, session.reload.read_attribute(:session_id)
+      end
     end
   end
 end
