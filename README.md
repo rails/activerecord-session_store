@@ -99,11 +99,17 @@ The example SqlBypass class is a generic SQL session store. You may
 use it as a basis for high-performance database-specific stores.
 
 Please note that you will need to manually include the silencer module to your
-custom logger if you are using a logger other than `Logger` and `Syslog::Logger`
-and their subclasses:
+custom logger if you are using a logger other than `ActiveSupport::Logger` and
+its subclasses:
 
 ```ruby
-MyLogger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
+MyLogger.include ActiveSupport::LoggerSilence
+```
+
+Or if you are using Rails 5.2 or older:
+
+```ruby
+MyLogger.include ::LoggerSilence
 ```
 
 This silencer is being used to silence the logger and not leaking private
