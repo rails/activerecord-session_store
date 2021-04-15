@@ -79,7 +79,7 @@ for free if you add `created_at` and `updated_at` datetime columns to
 the `sessions` table, making periodic session expiration a snap.
 
 You may provide your own session class implementation, whether a
-feature-packed Active Record or a bare-metal high-performance SQL
+feature-packed Active Record, or a bare-metal high-performance SQL
 store, by setting
 
 ```ruby
