@@ -38,7 +38,7 @@ been updated in the last 30 days. The 30 days cutoff can be changed using the
 Configuration
 --------------
 
-The default assumes a `sessions` tables with columns:
+The default assumes a `sessions` table with columns:
 
 *  `id` (numeric primary key),
 *  `session_id` (string, usually varchar; maximum length is 255), and
