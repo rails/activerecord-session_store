@@ -6,6 +6,7 @@ git "https://github.com/rails/rails.git", :branch => "main" do
   gem "railties"
 end
 
-gem "rack", :git => "https://github.com/rack/rack.git", :branch => "master"
+gem "rack", :git => "https://github.com/rack/rack.git", :branch => "main"
+gem "rack-session", :git => "https://github.com/rack/rack-session.git", :branch => "main"
 
 gemspec :path => "../"
