@@ -1,7 +1,0 @@
-source "https://rubygems.org"
-
-gem "actionpack", github: "rails/rails", branch: "5-2-stable"
-gem "activerecord", github: "rails/rails", branch: "5-2-stable"
-gem "railties", github: "rails/rails", branch: "5-2-stable"
-
-gemspec :path => "../"

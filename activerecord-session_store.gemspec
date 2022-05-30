@@ -19,9 +19,9 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = %w( README.md )
   s.rdoc_options.concat ['--main',  'README.md']
 
-  s.add_dependency('activerecord', '>= 5.2.4.1')
-  s.add_dependency('actionpack', '>= 5.2.4.1')
-  s.add_dependency('railties', '>= 5.2.4.1')
+  s.add_dependency('activerecord', '>= 6.1')
+  s.add_dependency('actionpack', '>= 6.1')
+  s.add_dependency('railties', '>= 6.1')
   s.add_dependency('rack', '>= 2.0.8', '< 3')
   s.add_dependency('multi_json', '~> 1.11', '>= 1.11.2')
 
