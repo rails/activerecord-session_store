@@ -6,7 +6,7 @@ require 'action_dispatch'
 require 'minitest/autorun'
 
 require 'active_record/session_store'
-require 'active_support/messages/rotation_configuration' unless ActiveRecord::VERSION::STRING < '5.2'
+require 'active_support/messages/rotation_configuration'
 
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
 
@@ -77,6 +77,4 @@ class RoutedRackApp
   end
 end
 
-if ActiveSupport::TestCase.respond_to?(:test_order=)
-  ActiveSupport::TestCase.test_order = :random
-end
+ActiveSupport::TestCase.test_order = :random

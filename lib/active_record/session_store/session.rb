@@ -17,13 +17,6 @@ module ActiveRecord
       before_save :serialize_data!
       before_save :raise_on_session_data_overflow!
 
-      # This method is defiend in `protected_attributes` gem. We can't check for
-      # `attr_accessible` as Rails also define this and raise `RuntimeError`
-      # telling you to use the gem.
-      if respond_to?(:accessible_attributes)
-        attr_accessible :session_id, :data
-      end
-
       class << self
         def data_column_size_limit
           @data_column_size_limit ||= columns_hash[data_column_name].limit
@@ -81,7 +74,6 @@ module ActiveRecord
       private
         def serialize_data!
           unless loaded?
-            return false if Rails::VERSION::MAJOR < 5
             throw :abort
           end
           write_attribute(@@data_column_name, self.class.serialize(data))
@@ -92,7 +84,6 @@ module ActiveRecord
         # ActionController::SessionOverflowError.
         def raise_on_session_data_overflow!
           unless loaded?
-            return false if Rails::VERSION::MAJOR < 5
             throw :abort
           end
           limit = self.class.data_column_size_limit

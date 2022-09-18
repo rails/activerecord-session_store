@@ -21,20 +21,12 @@ module ActiveRecord
       end
 
       def drop_table!
-        if connection.schema_cache.respond_to?(:clear_data_source_cache!)
-          connection.schema_cache.clear_data_source_cache!(table_name)
-        else
-          connection.schema_cache.clear_table_cache!(table_name)
-        end
+        connection.schema_cache.clear_data_source_cache!(table_name)
         connection.drop_table table_name
       end
 
       def create_table!
-        if connection.schema_cache.respond_to?(:clear_data_source_cache!)
-          connection.schema_cache.clear_data_source_cache!(table_name)
-        else
-          connection.schema_cache.clear_table_cache!(table_name)
-        end
+        connection.schema_cache.clear_data_source_cache!(table_name)
         connection.create_table(table_name) do |t|
           t.string session_id_column, :limit => 255
           t.text data_column_name
