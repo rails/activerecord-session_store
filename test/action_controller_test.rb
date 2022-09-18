@@ -262,7 +262,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
         verifier = ActiveSupport::MessageVerifier.new(bad_key, serializer: Marshal)
       end
 
-      cookies[SessionKey] = verifier.generate("foo" => "bar", "session_id" => "abc")
+      cookies[SessionKey] = verifier.generate({ "foo" => "bar", "session_id" => "abc" })
 
       get "/get_session_value"
 
@@ -283,7 +283,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
         encryptor = ActiveSupport::MessageEncryptor.new("A" * 32, cipher: Cipher, serializer: Marshal)
       end
 
-      cookies[SessionKey] = encryptor.encrypt_and_sign("foo" => "bar", "session_id" => "abc")
+      cookies[SessionKey] = encryptor.encrypt_and_sign({ "foo" => "bar", "session_id" => "abc" })
 
       get "/get_session_value"
 
@@ -427,10 +427,9 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     else
       # Overwrite get to send SessionSecret in env hash
       # Inspired by https://github.com/rails/rails/blob/master/actionpack/test/dispatch/session/cookie_store_test.rb
-      def get(path, *args)
-        args[0] ||= {}
-        args[0][:headers] ||= {}
-        args[0][:headers].tap do |config|
+      def get(path, **options)
+        options[:headers] ||= {}
+        options[:headers].tap do |config|
           signed = ActiveRecord::SessionStore::Session.sign_cookie
           encrypted = ActiveRecord::SessionStore::Session.encrypt_cookie
           aead_mode = (Cipher == "aes-256-gcm")
@@ -468,7 +467,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
 
         end
 
-        super(path, *args)
+        super
       end
     end
 
