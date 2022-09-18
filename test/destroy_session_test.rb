@@ -25,7 +25,7 @@ if ActiveRecord::VERSION::MAJOR > 4
           s['set_something_so_it_loads'] = true
 
           session_model = req.env[record_key]
-          session_model.update_attributes(:data => {'rails' => 'ftw'})
+          session_model.update(:data => {'rails' => 'ftw'})
 
           s.destroy
 
@@ -38,7 +38,7 @@ if ActiveRecord::VERSION::MAJOR > 4
           s['set_something_so_it_loads'] = true
 
           session_model = req.env[record_key]
-          session_model.update_attributes(:data => {'rails' => 'ftw'})
+          session_model.update(:data => {'rails' => 'ftw'})
 
           s.destroy
 
