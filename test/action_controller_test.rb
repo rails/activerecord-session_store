@@ -35,7 +35,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
 
     def get_session_id
-      render :plain => "#{request.session.id}"
+      render :plain => "#{request.session['session_id']}"
     end
 
     def call_reset_session
@@ -214,7 +214,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  # From https://github.com/rails/rails/blob/master/actionpack/test/dispatch/session/cookie_store_test.rb
+  # From https://github.com/rails/rails/blob/main/actionpack/test/dispatch/session/cookie_store_test.rb
   def test_signed_cookie_disregards_tampered_sessions
     ActiveRecord::SessionStore::Session.sign_cookie = true
     with_test_route_set do
@@ -231,7 +231,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  # From https://github.com/rails/rails/blob/master/actionpack/test/dispatch/session/cookie_store_test.rb
+  # From https://github.com/rails/rails/blob/main/actionpack/test/dispatch/session/cookie_store_test.rb
   def test_encrypted_cookie_disregards_tampered_sessions
     ActiveRecord::SessionStore::Session.encrypt_cookie = true
     with_test_route_set do
@@ -342,10 +342,71 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  %w{ session sql_bypass }.each do |class_name|
+    define_method :"test_sessions_are_indexed_by_a_hashed_session_id_for_#{class_name}" do
+      with_store(class_name) do
+        with_test_route_set do
+          get '/set_session_value'
+          assert_response :success
+          public_session_id = cookies['_session_id']
+
+          session = ActiveRecord::SessionStore::Session.last
+          assert session
+          assert_not_equal public_session_id, session.session_id
+
+          expected_private_id = Rack::Session::SessionId.new(public_session_id).private_id
+
+          assert_equal expected_private_id, session.session_id
+        end
+      end
+    end
+
+    define_method :"test_unsecured_sessions_are_retrieved_and_migrated_for_#{class_name}" do
+      with_store(class_name) do
+        with_test_route_set do
+          get '/set_session_value', params: { foo: 'baz' }
+          assert_response :success
+          public_session_id = cookies['_session_id']
+
+          session = ActiveRecord::SessionStore::Session.last
+          session.data # otherwise we cannot save
+          session.session_id = public_session_id
+          session.save!
+
+          get '/get_session_value'
+          assert_response :success
+          assert_equal 'foo: "baz"', response.body
+
+          session = ActiveRecord::SessionStore::Session.last
+          assert_not_equal public_session_id, session.read_attribute(:session_id)
+        end
+      end
+    end
+
+    # to avoid a different kind of timing attack
+    define_method :"test_sessions_cannot_be_retrieved_by_their_private_session_id_for_#{class_name}" do
+      with_store(class_name) do
+        with_test_route_set do
+          get '/set_session_value', params: { foo: 'baz' }
+          assert_response :success
+
+          session = ActiveRecord::SessionStore::Session.last
+          private_session_id = session.read_attribute(:session_id)
+
+          cookies.merge("_session_id=#{private_session_id};path=/")
+
+          get '/get_session_value'
+          assert_response :success
+          assert_equal 'foo: nil', response.body
+        end
+      end
+    end
+  end
+
   private
 
     # Overwrite get to send SessionSecret in env hash
-    # Inspired by https://github.com/rails/rails/blob/master/actionpack/test/dispatch/session/cookie_store_test.rb
+    # Inspired by https://github.com/rails/rails/blob/main/actionpack/test/dispatch/session/cookie_store_test.rb
     def get(path, **options)
       options[:headers] ||= {}
       options[:headers].tap do |config|

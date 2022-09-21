@@ -97,7 +97,7 @@ for free if you add `created_at` and `updated_at` datetime columns to
 the `sessions` table, making periodic session expiration a snap.
 
 You may provide your own session class implementation, whether a
-feature-packed Active Record or a bare-metal high-performance SQL
+feature-packed Active Record, or a bare-metal high-performance SQL
 store, by setting
 
 ```ruby
@@ -117,17 +117,49 @@ The example SqlBypass class is a generic SQL session store. You may
 use it as a basis for high-performance database-specific stores.
 
 Please note that you will need to manually include the silencer module to your
-custom logger if you are using a logger other than `Logger` and `Syslog::Logger`
-and their subclasses:
+custom logger if you are using a logger other than `ActiveSupport::Logger` and
+its subclasses:
 
 ```ruby
-MyLogger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
+MyLogger.include ActiveSupport::LoggerSilence
+```
+
+Or if you are using Rails 5.2 or older:
+
+```ruby
+MyLogger.include ::LoggerSilence
 ```
 
 This silencer is being used to silence the logger and not leaking private
 information into the log, and it is required for security reason.
 
-## Contributing to Active Record Session Store
+CVE-2019-25025 mitigation
+--------------
+
+Sessions that were created by Active Record Session Store version 1.x are
+affected by [CVE-2019-25025]. This means an attacker can perform a timing
+attack against the session IDs stored in the database.
+
+[CVE-2019-25025]: https://github.com/advisories/GHSA-cvw2-xj8r-mjf7
+
+After upgrade to version 2.0.0, you should run [`db:sessions:upgrade`] rake task
+to upgrade all existing session records in your database to the secured version.
+
+[`db:sessions:upgrade`]: https://github.com/rails/activerecord-session_store/blob/master/lib/tasks/database.rake#L22
+
+```console
+$ rake db:sessions:upgrade
+```
+
+This rake task is idempotent and can be run multiple times, and session data of
+users will remain intact.
+
+Please see [#151] for more details.
+
+[#151]: https://github.com/rails/activerecord-session_store/pull/151
+
+Contributing to Active Record Session Store
+--------------
 
 Active Record Session Store is work of many contributors. You're encouraged to submit pull requests, propose features and discuss issues.
 

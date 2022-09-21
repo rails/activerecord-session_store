@@ -68,7 +68,7 @@ module ActionDispatch
     #
     # The example SqlBypass class is a generic SQL session store. You may
     # use it as a basis for high-performance database-specific stores.
-    class ActiveRecordStore < ActionDispatch::Session::AbstractStore
+    class ActiveRecordStore < ActionDispatch::Session::AbstractSecureStore
       # The class used for session storage. Defaults to
       # ActiveRecord::SessionStore::Session
       cattr_accessor :session_class
@@ -78,12 +78,12 @@ module ActionDispatch
 
     private
       def get_session(request, sid)
-        logger.silence_logger do
-          unless sid and session = @@session_class.find_by_session_id(sid)
+        logger.silence do
+          unless sid and session = get_session_with_fallback(sid)
             # If the sid was nil or if there is no pre-existing session under the sid,
             # force the generation of a new sid and associate a new session associated with the new sid
             sid = generate_sid
-            session = @@session_class.new(:session_id => sid, :data => {})
+            session = @@session_class.new(:session_id => sid.private_id, :data => {})
           end
           request.env[SESSION_RECORD_KEY] = session
           [sid, session.data]
@@ -95,8 +95,8 @@ module ActionDispatch
       end
 
       # Inspired by ActionDispatch::Session::CookieStore
-      # https://github.com/rails/rails/blob/master/actionpack/lib/action_dispatch/middleware/session/cookie_store.rb
-      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractStore)
+      # https://github.com/rails/rails/blob/main/actionpack/lib/action_dispatch/middleware/session/cookie_store.rb
+      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractSecureStore)
       # (noting that ActionDispatch::Session::CookieStore does not currently respect :cookie_only)
       def extract_session_id(req)
         sid = stale_session_check! do
@@ -104,14 +104,14 @@ module ActionDispatch
         end
 
         # Inspired by Rack::Session::Abstract::Persisted
-        # https://github.com/rack/rack/blob/master/lib/rack/session/abstract/id.rb
+        # https://github.com/rack/rack/blob/abca7d59c566320f1b60d1f5224beac9d201fa3b/lib/rack/session/abstract/id.rb
         sid ||= req.params[@key] unless @cookie_only
         sid
       end
 
       # Inspired by ActionDispatch::Session::CookieStore
-      # https://github.com/rails/rails/blob/master/actionpack/lib/action_dispatch/middleware/session/cookie_store.rb
-      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractStore)
+      # https://github.com/rails/rails/blob/main/actionpack/lib/action_dispatch/middleware/session/cookie_store.rb
+      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractSecureStore)
       def unpacked_cookie_data(req)
 
         req.fetch_header("action_dispatch.request.unsigned_session_cookie") do |k|
@@ -123,13 +123,13 @@ module ActionDispatch
       end
 
       # Duplicated from ActionDispatch::Session::CookieStore
-      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractStore)
+      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractSecureStore)
       def set_cookie(request, session_id, cookie)
         cookie_jar(request)[@key] = cookie
       end
 
       # Duplicated from ActionDispatch::Session::CookieStore
-      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractStore)
+      # (ideally should by DRY in ActionPack by migrating to ActionDispatch::Session::AbstractSecureStore)
       def get_cookie(req)
         cookie_jar(req)[@key]
       end
@@ -144,8 +144,8 @@ module ActionDispatch
       end
 
       def write_session(request, sid, session_data, options)
-        logger.silence_logger do
-          record = get_session_model(request, sid)
+        logger.silence do
+          record, sid = get_session_model(request, sid)
           record.data = session_data
           return false unless record.save
 
@@ -161,9 +161,9 @@ module ActionDispatch
       end
 
       def delete_session(request, session_id, options)
-        logger.silence_logger do
+        logger.silence do
           if sid = current_session_id(request)
-            if model = @@session_class.find_by_session_id(sid)
+            if model = get_session_with_fallback(sid)
               data = model.data
               model.destroy
             end
@@ -175,7 +175,7 @@ module ActionDispatch
             new_sid = generate_sid
 
             if options[:renew]
-              new_model = @@session_class.new(:session_id => new_sid, :data => data)
+              new_model = @@session_class.new(:session_id => new_sid.private_id, :data => data)
               new_model.save
               request.env[SESSION_RECORD_KEY] = new_model
             end
@@ -185,11 +185,11 @@ module ActionDispatch
       end
 
       def get_session_model(request, id)
-        logger.silence_logger do
-          model = @@session_class.find_by_session_id(id)
-          if !model
+        logger.silence do
+          model = get_session_with_fallback(id)
+          unless model
             id = generate_sid
-            model = @@session_class.new(:session_id => id, :data => {})
+            model = @@session_class.new(:session_id => id.private_id, :data => {})
             model.save
           end
           if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
@@ -197,18 +197,41 @@ module ActionDispatch
           else
             request.env[SESSION_RECORD_KEY] ||= model
           end
-          model
+          [model, id]
+        end
+      end
+
+      def get_session_with_fallback(sid)
+        if sid && !self.class.private_session_id?(sid.public_id)
+          if (secure_session = @@session_class.find_by_session_id(sid.private_id))
+            secure_session
+          elsif (insecure_session = @@session_class.find_by_session_id(sid.public_id))
+            insecure_session.session_id = sid.private_id # this causes the session to be secured
+            insecure_session
+          end
         end
       end
 
       def find_session(request, id)
-        model = get_session_model(request, id)
-        [model.session_id, model.data]
+        model, id = get_session_model(request, id)
+        [id, model.data]
+      end
+
+      module NilLogger
+        def self.silence
+          yield
+        end
       end
 
       def logger
-        ActiveRecord::Base.logger || ActiveRecord::SessionStore::NilLogger
+        ActiveRecord::Base.logger || NilLogger
       end
+
+      def self.private_session_id?(session_id)
+        # user tried to retrieve a session by a private key?
+        session_id =~ /\A\d+::/
+      end
+
     end
   end
 end
