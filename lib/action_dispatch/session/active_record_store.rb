@@ -100,12 +100,13 @@ module ActionDispatch
       # (noting that ActionDispatch::Session::CookieStore does not currently respect :cookie_only)
       def extract_session_id(req)
         sid = stale_session_check! do
-          unpacked_cookie_data(req)
+          sid_str = unpacked_cookie_data(req)
+          sid_str && Rack::Session::SessionId.new(sid_str)
         end
 
         # Inspired by Rack::Session::Abstract::Persisted
         # https://github.com/rack/rack/blob/abca7d59c566320f1b60d1f5224beac9d201fa3b/lib/rack/session/abstract/id.rb
-        sid ||= req.params[@key] unless @cookie_only
+        sid ||= Rack::Session::SessionId.new(req.params[@key]) unless @cookie_only || ! req.params[@key]
         sid
       end
 
