@@ -11,6 +11,9 @@ if ActiveRecord::VERSION::MAJOR > 4
           @req = ActionDispatch::Request.empty
           ActionDispatch::Session::ActiveRecordStore.session_class.drop_table! rescue nil
           ActionDispatch::Session::ActiveRecordStore.session_class.create_table!
+
+          ActiveRecord::SessionStore::Session.sign_cookie = false
+          ActiveRecord::SessionStore::Session.encrypt_cookie = false
         end
 
         def record_key
