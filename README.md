@@ -38,6 +38,13 @@ been updated in the last 30 days. The 30 days cutoff can be changed using the
 Configuration
 --------------
 
+Disable fallback to use insecure session by providing the option
+`secure_session_only` when setting up the session store.
+
+```ruby
+Rails.application.config.session_store :active_record_store, key: '_my_app_session', secure_session_only: true
+```
+
 The default assumes a `sessions` table with columns:
 
 *  `id` (numeric primary key),
