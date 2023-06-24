@@ -60,15 +60,16 @@ module ActiveRecord
 
         # Look up a session by id and deserialize its data if found.
         def find_by_session_id(session_id)
-          if record = connection.select_one("SELECT #{connection.quote_column_name(data_column)} AS data FROM #{@@table_name} WHERE #{connection.quote_column_name(@@session_id_column)}=#{connection.quote(session_id.to_s)}")
-            new(:session_id => session_id, :serialized_data => record['data'])
+          if record = connection.select_one("SELECT #{connection.quote_column_name(data_column)} AS data FROM #{@@table_name} WHERE #{connection.quote_column_name(@@session_id_column)}=#{connection.quote(session_id)}")
+            new(:session_id => session_id, :retrieved_by => session_id, :serialized_data => record['data'])
           end
         end
       end
 
       delegate :connection, :connection=, :connection_pool, :connection_pool=, :to => self
 
-      attr_reader :session_id, :new_record
+      attr_reader :new_record
+      attr_accessor :session_id
       alias :new_record? :new_record
 
       attr_writer :data
@@ -77,7 +78,8 @@ module ActiveRecord
       # telling us to postpone deserializing until the data is requested.
       # We need to handle a normal data attribute in case of a new record.
       def initialize(attributes)
-        @session_id     = attributes[:session_id]
+        @session_id = attributes[:session_id]
+        @retrieved_by = attributes[:retrieved_by]
         @data           = attributes[:data]
         @serialized_data = attributes[:serialized_data]
         @new_record     = @serialized_data.nil?
@@ -122,8 +124,10 @@ module ActiveRecord
         else
           connect.update <<-end_sql, 'Update session'
             UPDATE #{table_name}
-            SET #{connect.quote_column_name(data_column)}=#{connect.quote(serialized_data)}
-            WHERE #{connect.quote_column_name(session_id_column)}=#{connect.quote(session_id)}
+            SET
+              #{connect.quote_column_name(data_column)}=#{connect.quote(serialized_data)},
+              #{connect.quote_column_name(session_id_column)}=#{connect.quote(@session_id)}
+            WHERE #{connect.quote_column_name(session_id_column)}=#{connect.quote(@retrieved_by)}
           end_sql
         end
       end
@@ -134,7 +138,7 @@ module ActiveRecord
         connect = connection
         connect.delete <<-end_sql, 'Destroy session'
           DELETE FROM #{table_name}
-          WHERE #{connect.quote_column_name(session_id_column)}=#{connect.quote(session_id.to_s)}
+          WHERE #{connect.quote_column_name(session_id_column)}=#{connect.quote(session_id)}
         end_sql
       end
     end
