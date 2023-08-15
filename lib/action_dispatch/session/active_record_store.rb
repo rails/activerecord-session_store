@@ -55,7 +55,7 @@ module ActionDispatch
     class ActiveRecordStore < ActionDispatch::Session::AbstractSecureStore
       # The class used for session storage. Defaults to
       # ActiveRecord::SessionStore::Session
-      cattr_accessor :session_class
+      class_attribute :session_class
 
       SESSION_RECORD_KEY = 'rack.session.record'
       ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
@@ -67,7 +67,7 @@ module ActionDispatch
             # If the sid was nil or if there is no pre-existing session under the sid,
             # force the generation of a new sid and associate a new session associated with the new sid
             sid = generate_sid
-            session = @@session_class.new(:session_id => sid.private_id, :data => {})
+            session = session_class.new(:session_id => sid.private_id, :data => {})
           end
           request.env[SESSION_RECORD_KEY] = session
           [sid, session.data]
@@ -106,7 +106,7 @@ module ActionDispatch
             new_sid = generate_sid
 
             if options[:renew]
-              new_model = @@session_class.new(:session_id => new_sid.private_id, :data => data)
+              new_model = session_class.new(:session_id => new_sid.private_id, :data => data)
               new_model.save
               request.env[SESSION_RECORD_KEY] = new_model
             end
@@ -120,7 +120,7 @@ module ActionDispatch
           model = get_session_with_fallback(id)
           unless model
             id = generate_sid
-            model = @@session_class.new(:session_id => id.private_id, :data => {})
+            model = session_class.new(:session_id => id.private_id, :data => {})
             model.save
           end
           if request.env[ENV_SESSION_OPTIONS_KEY][:id].nil?
@@ -134,9 +134,9 @@ module ActionDispatch
 
       def get_session_with_fallback(sid)
         if sid && !self.class.private_session_id?(sid.public_id)
-          if (secure_session = @@session_class.find_by_session_id(sid.private_id))
+          if (secure_session = session_class.find_by_session_id(sid.private_id))
             secure_session
-          elsif (insecure_session = @@session_class.find_by_session_id(sid.public_id))
+          elsif (insecure_session = session_class.find_by_session_id(sid.public_id))
             insecure_session.session_id = sid.private_id # this causes the session to be secured
             insecure_session
           end
