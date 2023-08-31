@@ -3,5 +3,6 @@ source "https://rubygems.org"
 gem "actionpack", github: "rails/rails", branch: "7-0-stable"
 gem "activerecord", github: "rails/rails", branch: "7-0-stable"
 gem "railties", github: "rails/rails", branch: "7-0-stable"
+gem "rack", "< 3"
 
 gemspec :path => "../"
