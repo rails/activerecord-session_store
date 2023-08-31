@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version     = ActiveRecord::SessionStore::VERSION
   s.summary     = 'An Action Dispatch session store backed by an Active Record class.'
 
-  s.required_ruby_version = '>= 2.2.2'
+  s.required_ruby_version = '>= 2.5.0'
   s.license     = 'MIT'
 
   s.author      = 'David Heinemeier Hansson'
