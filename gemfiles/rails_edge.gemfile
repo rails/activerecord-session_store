@@ -6,6 +6,6 @@ git "https://github.com/rails/rails.git", :branch => "main" do
   gem "railties"
 end
 
-gem "rack", "~> 2.0", ">= 2.2.4"
+gem "rack", ">= 2.2.4", "< 4"
 
 gemspec :path => "../"
