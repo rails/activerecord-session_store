@@ -44,6 +44,14 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_secure_does_not_log_update_sql
+    with_fake_logger do
+      create_old_session!
+      ActiveRecord::SessionStore::Session.find_each(&:secure!)
+      assert_no_match(/UPDATE/, fake_logger.string)
+    end
+  end
+
   private
 
     def with_logger(logger)
@@ -60,5 +68,13 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
 
     def fake_logger
       @fake_logger ||= StringIO.new
+    end
+
+    def create_old_session!
+      session = ActionDispatch::Session::ActiveRecordStore.session_class.new(
+        session_id: "original_session_id",
+        data: "data"
+      )
+      session.save
     end
 end
