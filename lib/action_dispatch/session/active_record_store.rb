@@ -39,9 +39,10 @@ module ActionDispatch
     # feature-packed Active Record or a bare-metal high-performance SQL
     # store, by setting
     #
-    #   ActionDispatch::Session::ActiveRecordStore.session_class = MySessionClass
+    #   ActionDispatch::Session::ActiveRecordStore.session_class = "MySessionClass"
     #
-    # You must implement these methods:
+    # The class may optionally be passed as a string or proc to prevent autoloading
+    # code early. You must implement these methods:
     #
     #   self.find_by_session_id(session_id)
     #   initialize(hash_of_session_id_and_data, options_hash = {})
@@ -53,12 +54,32 @@ module ActionDispatch
     # The example SqlBypass class is a generic SQL session store. You may
     # use it as a basis for high-performance database-specific stores.
     class ActiveRecordStore < ActionDispatch::Session::AbstractSecureStore
-      # The class used for session storage. Defaults to
-      # ActiveRecord::SessionStore::Session
-      class_attribute :session_class
+      class << self
+        # The class used for session storage. Defaults to
+        # ActiveRecord::SessionStore::Session
+        def session_class
+          @session_class_instance ||= case @session_class
+          when Proc
+            @session_class.call
+          when String
+            @session_class.constantize
+          else
+            @session_class
+          end
+        end
+
+        def session_class=(session_class)
+          @session_class_instance = nil
+          @session_class = session_class
+        end
+      end
 
       SESSION_RECORD_KEY = 'rack.session.record'
       ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
+
+      def session_class
+        self.class.session_class
+      end
 
     private
       def get_session(request, sid)
