@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version     = ActiveRecord::SessionStore::VERSION
   s.summary     = 'An Action Dispatch session store backed by an Active Record class.'
 
-  s.required_ruby_version = '>= 1.9.3'
+  s.required_ruby_version = '>= 2.2.2'
   s.license     = 'MIT'
 
   s.author      = 'David Heinemeier Hansson'
@@ -19,10 +19,10 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = %w( README.md )
   s.rdoc_options.concat ['--main',  'README.md']
 
-  s.add_dependency('activerecord', '>= 4.0')
-  s.add_dependency('actionpack', '>= 4.0')
-  s.add_dependency('railties', '>= 4.0')
-  s.add_dependency('rack', '>= 1.5.2', '< 3')
+  s.add_dependency('activerecord', '>= 5.2')
+  s.add_dependency('actionpack', '>= 5.2')
+  s.add_dependency('railties', '>= 5.2')
+  s.add_dependency('rack', '>= 2.0.0', '< 3')
   s.add_dependency('multi_json', '~> 1.11', '>= 1.11.2')
 
   s.add_development_dependency('sqlite3')

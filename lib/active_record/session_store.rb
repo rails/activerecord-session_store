@@ -1,7 +1,6 @@
 require 'active_record'
 require 'active_record/session_store/version'
 require 'action_dispatch/session/active_record_store'
-require "active_record/session_store/extension/logger_silencer"
 require 'active_support/core_ext/hash/keys'
 require 'multi_json'
 
@@ -21,20 +20,12 @@ module ActiveRecord
       end
 
       def drop_table!
-        if connection.schema_cache.respond_to?(:clear_data_source_cache!)
-          connection.schema_cache.clear_data_source_cache!(table_name)
-        else
-          connection.schema_cache.clear_table_cache!(table_name)
-        end
+        connection.schema_cache.clear_data_source_cache!(table_name)
         connection.drop_table table_name
       end
 
       def create_table!
-        if connection.schema_cache.respond_to?(:clear_data_source_cache!)
-          connection.schema_cache.clear_data_source_cache!(table_name)
-        else
-          connection.schema_cache.clear_table_cache!(table_name)
-        end
+        connection.schema_cache.clear_data_source_cache!(table_name)
         connection.create_table(table_name) do |t|
           t.string session_id_column, :limit => 255
           t.text data_column_name
@@ -117,10 +108,3 @@ end
 
 require 'active_record/session_store/sql_bypass'
 require 'active_record/session_store/railtie' if defined?(Rails)
-
-Logger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
-
-begin
-  require "syslog/logger"
-  Syslog::Logger.send :include, ActiveRecord::SessionStore::Extension::LoggerSilencer
-rescue LoadError; end
