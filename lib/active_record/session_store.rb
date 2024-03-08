@@ -2,7 +2,7 @@ require 'active_record'
 require 'active_record/session_store/version'
 require 'action_dispatch/session/active_record_store'
 require 'active_support/core_ext/hash/keys'
-require 'multi_json'
+require 'json'
 
 module ActiveRecord
   module SessionStore
@@ -62,12 +62,12 @@ module ActiveRecord
       # Uses built-in JSON library to encode/decode session
       class JsonSerializer
         def self.load(value)
-          hash = MultiJson.load(value)
+          hash = JSON.parse(value)
           hash.is_a?(Hash) ? hash.with_indifferent_access[:value] : hash
         end
 
         def self.dump(value)
-          MultiJson.dump(value: value)
+          JSON.dump(value: value)
         end
       end
 
