@@ -1,6 +1,6 @@
 name: activerecord-session_store
 
-owner: principal_engineers # team definitions at https://app.opslevel.com/teams
+owner: funnelcake # team definitions at https://app.opslevel.com/teams
 
 purpose: # multiple choice
   # - do_not_track # demo testing personal - will not be tracked in catalog
