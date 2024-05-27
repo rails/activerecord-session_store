@@ -1,0 +1,28 @@
+name: activerecord-session_store
+
+owner: funnelcake # team definitions at https://app.opslevel.com/teams
+
+purpose: # multiple choice
+  # - do_not_track # demo testing personal - will not be tracked in catalog
+  # - app
+  - library
+  # - configuration
+  # - other # example: frontend_dataset
+deployment_type: # multiple choice
+  # - kubernetes
+  # - infrastructure_serverless
+  - package
+  # - cli
+  # - data
+  # - docker-image
+
+# tier: tier_1 # Mission-critical service or repository. Failure could result in significant impact to revenue or reputation.
+# tier: tier_2 # Customer-facing service or repository. Failure results in degraded experience for customers, although without significant impact to revenue or reputation.
+# tier: tier_3 # Internal service or repository. Failure could result in productivity being compromised within the company.
+# tier: tier_4 # Other service or repository. Failure doesn't result in immediate or significant impact.
+tier: tier_na # this repo does not have a tier. typically libraries
+
+properties:
+  public_facing: false
+  pci: false
+  pii: false
