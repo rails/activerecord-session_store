@@ -1,0 +1,5 @@
+# GitHub COODEOWNERS
+#
+# This file configures the CODEOWNERS for the repository,
+# automatically adding them on pull request reviews and making visible which team is responsible for InkPress
+*   @customink/funnelcake
