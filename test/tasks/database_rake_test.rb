@@ -40,16 +40,22 @@ module ActiveRecord
           session.updated_at = 5.minutes.until(cutoff_period)
         end
 
+        Session.create!(data: "fixed session") do |session|
+          session.created_at = 5.minutes.until(cutoff_period)
+        end
+
         recent_session = Session.create!(data: "recent") do |session|
           session.updated_at = 5.minutes.since(cutoff_period)
         end
 
         Rake.application.invoke_task 'db:sessions:trim'
 
-        old_session_count = Session.where("updated_at < ?", cutoff_period).count
+        obsolete_session_count = Session.where("updated_at < ?", cutoff_period).count
+        fixed_session_count = Session.where("created_at < ?", cutoff_period).count
         retained_session = Session.find(recent_session.id)
 
-        assert_equal 0, old_session_count
+        assert_equal 0, obsolete_session_count
+        assert_equal 0, fixed_session_count
         assert_equal retained_session, recent_session
       end
 
