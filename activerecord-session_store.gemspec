@@ -24,6 +24,4 @@ Gem::Specification.new do |s|
   s.add_dependency('railties', '>= 6.1')
   s.add_dependency('rack', '>= 2.0.8', '< 4')
   s.add_dependency('cgi', '>= 0.3.6')
-
-  s.add_development_dependency('sqlite3')
 end

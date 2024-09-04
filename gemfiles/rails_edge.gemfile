@@ -7,5 +7,6 @@ git "https://github.com/rails/rails.git", :branch => "main" do
 end
 
 gem "rack", ">= 2.2.4", "< 4"
+gem "sqlite3"
 
 gemspec :path => "../"
