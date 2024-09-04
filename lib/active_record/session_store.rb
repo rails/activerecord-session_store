@@ -62,7 +62,7 @@ module ActiveRecord
       # Uses built-in JSON library to encode/decode session
       class JsonSerializer
         def self.load(value)
-          hash = JSON.load(value)
+          hash = JSON.parse(value)
           hash.is_a?(Hash) ? hash.with_indifferent_access[:value] : hash
         end
 
