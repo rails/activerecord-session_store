@@ -1,0 +1,9 @@
+source "https://rubygems.org"
+
+gem "actionpack", github: "rails/rails", branch: "7-1-stable"
+gem "activerecord", github: "rails/rails", branch: "7-1-stable"
+gem "railties", github: "rails/rails", branch: "7-1-stable"
+gem "rack", "< 3"
+gem "sqlite3", "~> 1.4"
+
+gemspec :path => "../"
