@@ -20,19 +20,45 @@ module ActionDispatch
   end
 end
 
+class RoutedRackApp
+  class Config < Struct.new(:middleware)
+  end
+
+  attr_reader :routes
+
+  def initialize(routes, &blk)
+    @routes = routes
+    @stack = ActionDispatch::MiddlewareStack.new(&blk)
+    @app = @stack.build(@routes)
+  end
+
+  def call(env)
+    @app.call(env)
+  end
+
+  def config
+    Config.new(@stack)
+  end
+end
+
 class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
   include ActionDispatch::SharedRoutes
 
-  def self.build_app(routes = nil)
+  def self.build_app(routes, options)
     RoutedRackApp.new(routes || ActionDispatch::Routing::RouteSet.new) do |middleware|
+      middleware.use ActionDispatch::Session::ActiveRecordStore, options.reverse_merge(:key => '_session_id')
       middleware.use ActionDispatch::DebugExceptions
+      middleware.use ActionDispatch::ActionableExceptions
       middleware.use ActionDispatch::Callbacks
       middleware.use ActionDispatch::Cookies
       middleware.use ActionDispatch::Flash
+      middleware.use Rack::MethodOverride
       middleware.use Rack::Head
       yield(middleware) if block_given?
     end
   end
+
+  self.app = build_app(nil, {})
 
   private
 
@@ -45,11 +71,7 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
           actions.each { |action| get action, controller: "#{controller_namespace}/test" }
         end
 
-        @app = self.class.build_app(set) do |middleware|
-          middleware.use ActionDispatch::Session::ActiveRecordStore, options.reverse_merge(:key => '_session_id')
-          middleware.delete ActionDispatch::ShowExceptions
-        end
-
+        @app = self.class.build_app(set, options)
         yield
       end
     end
@@ -61,19 +83,6 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
     ensure
       ActionDispatch::Session::ActiveRecordStore.session_class = session_class
     end
-end
-
-class RoutedRackApp
-  attr_reader :routes
-
-  def initialize(routes, &blk)
-    @routes = routes
-    @stack = ActionDispatch::MiddlewareStack.new(&blk).build(@routes)
-  end
-
-  def call(env)
-    @stack.call(env)
-  end
 end
 
 ActiveSupport::TestCase.test_order = :random
