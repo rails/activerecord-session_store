@@ -197,7 +197,9 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_allows_session_fixation
-    with_test_route_set(:cookie_only => false) do
+    session_options(cookie_only: false)
+
+    with_test_route_set do
       get '/set_session_value'
       assert_response :success
       assert cookies['_session_id']
@@ -238,7 +240,9 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_incoming_invalid_session_id_via_parameter_should_be_ignored
-    with_test_route_set(:cookie_only => false) do
+    session_options(cookie_only: false)
+
+    with_test_route_set do
       open_session do |sess|
         sess.get '/set_session_value', :params => { :_session_id => 'INVALID' }
         new_session_id = sess.cookies['_session_id']
@@ -252,7 +256,9 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
   end
 
   def test_session_store_with_all_domains
-    with_test_route_set(:domain => :all) do
+    session_options(domain: :all)
+
+    with_test_route_set do
       get '/set_session_value'
       assert_response :success
     end
