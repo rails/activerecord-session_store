@@ -39,7 +39,9 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
   def test_log_silencer_with_logger_not_raise_exception
     with_logger ActiveSupport::Logger.new(Tempfile.new("tempfile")) do
       with_test_route_set do
-        get "/set_session_value"
+        assert_nothing_raised do
+          get "/set_session_value"
+        end
       end
     end
   end

@@ -46,7 +46,6 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
 
   def self.build_app(routes, options)
     RoutedRackApp.new(routes || ActionDispatch::Routing::RouteSet.new) do |middleware|
-      middleware.use ActionDispatch::Session::ActiveRecordStore, options.reverse_merge(:key => '_session_id')
       middleware.use ActionDispatch::DebugExceptions
       middleware.use ActionDispatch::ActionableExceptions
       middleware.use ActionDispatch::Callbacks
@@ -54,6 +53,7 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
       middleware.use ActionDispatch::Flash
       middleware.use Rack::MethodOverride
       middleware.use Rack::Head
+      middleware.use ActionDispatch::Session::ActiveRecordStore, options.reverse_merge(key: "_session_id")
       yield(middleware) if block_given?
     end
   end
@@ -71,7 +71,8 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
           actions.each { |action| get action, controller: "#{controller_namespace}/test" }
         end
 
-        @app = self.class.build_app(set, options)
+        self.class.app = self.class.build_app(set, options)
+
         yield
       end
     end
