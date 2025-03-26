@@ -61,6 +61,16 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
 
   private
 
+    # Overwrite `get` to set env hash
+    def get(path, **options)
+      options[:headers] ||= {}
+      options[:headers].tap do |config|
+        config["action_dispatch.cookies_same_site_protection"] ||= ->(_) { :lax }
+      end
+
+      super
+    end
+
     def session_options(options = {})
       (@session_options ||= {key: "_session_id"}).merge!(options)
     end
