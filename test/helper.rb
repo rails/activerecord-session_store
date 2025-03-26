@@ -71,9 +71,14 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
           actions.each { |action| get action, controller: "#{controller_namespace}/test" }
         end
 
-        self.class.app = self.class.build_app(set, options)
+        old_app = self.class.app
+        begin
+          self.class.app = self.class.build_app(set, options)
 
-        yield
+          yield
+        ensure
+          self.class.app = old_app
+        end
       end
     end
 
