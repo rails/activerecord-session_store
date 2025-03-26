@@ -59,6 +59,12 @@ module ActionDispatch
 
       SESSION_RECORD_KEY = 'rack.session.record'
       ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
+      DEFAULT_SAME_SITE = proc { |request| request.cookies_same_site_protection } # :nodoc:
+
+      def initialize(app, options = {})
+        options[:same_site] = DEFAULT_SAME_SITE unless options.key?(:same_site)
+        super
+      end
 
     private
       def get_session(request, sid)
