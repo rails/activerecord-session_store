@@ -13,6 +13,10 @@ Gem::Specification.new do |s|
   s.email       = 'david@loudthinking.com'
   s.homepage    = 'https://github.com/rails/activerecord-session_store'
 
+  s.metadata["homepage_uri"] = s.homepage
+  s.metadata["source_code_uri"] = s.homepage
+  s.metadata["changelog_uri"] = File.join(s.homepage, "blob/master/CHANGELOG.md")
+
   s.files        = Dir['CHANGELOG.md', 'MIT-LICENSE', 'README.md', 'lib/**/*']
   s.require_path = 'lib'
 
