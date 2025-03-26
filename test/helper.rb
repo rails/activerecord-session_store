@@ -1,13 +1,14 @@
-require 'bundler/setup'
+require "bundler/setup"
 
-require 'active_record'
-require 'action_controller'
-require 'action_dispatch'
-require 'minitest/autorun'
+require "active_record"
+require "action_controller"
+require "action_dispatch"
+require "debug"
+require "minitest/autorun"
 
-require 'active_record/session_store'
+require "active_record/session_store"
 
-ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
+ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
 
 SharedTestRoutes = ActionDispatch::Routing::RouteSet.new
 
