@@ -90,6 +90,31 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_default_same_site_derives_SameSite_from_env
+    with_test_route_set do
+      get "/set_session_value"
+      assert_match %r{SameSite=Lax}i, headers["Set-Cookie"]
+    end
+  end
+
+  def test_explicit_same_site_sets_SameSite
+    session_options(same_site: :strict)
+
+    with_test_route_set do
+      get "/set_session_value"
+      assert_match %r{SameSite=Strict}i, headers["Set-Cookie"]
+    end
+  end
+
+  def test_explicit_nil_same_site_omits_SameSite
+    session_options(same_site: nil)
+
+    with_test_route_set do
+      get "/set_session_value"
+      assert_no_match %r{SameSite=}i, headers["Set-Cookie"]
+    end
+  end
+
   def test_calling_reset_session_twice_does_not_raise_errors
     with_test_route_set do
       get '/call_reset_session', :params => { :twice => "true" }
