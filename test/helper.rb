@@ -44,7 +44,7 @@ end
 class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
   include ActionDispatch::SharedRoutes
 
-  def self.build_app(routes, options)
+  def self.build_app(routes = nil)
     RoutedRackApp.new(routes || ActionDispatch::Routing::RouteSet.new) do |middleware|
       middleware.use ActionDispatch::DebugExceptions
       middleware.use ActionDispatch::ActionableExceptions
@@ -53,16 +53,25 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
       middleware.use ActionDispatch::Flash
       middleware.use Rack::MethodOverride
       middleware.use Rack::Head
-      middleware.use ActionDispatch::Session::ActiveRecordStore, options.reverse_merge(key: "_session_id")
       yield(middleware) if block_given?
     end
   end
 
-  self.app = build_app(nil, {})
+  self.app = build_app
 
   private
 
-    def with_test_route_set(options = {})
+    def session_options(options = {})
+      (@session_options ||= {key: "_session_id"}).merge!(options)
+    end
+
+    def app
+      @app ||= self.class.build_app do |middleware|
+        middleware.use ActionDispatch::Session::ActiveRecordStore, session_options
+      end
+    end
+
+    def with_test_route_set
       controller_namespace = self.class.to_s.underscore
       actions = %w[set_session_value get_session_value call_reset_session renew get_session_id]
 
@@ -71,14 +80,7 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
           actions.each { |action| get action, controller: "#{controller_namespace}/test" }
         end
 
-        old_app = self.class.app
-        begin
-          self.class.app = self.class.build_app(set, options)
-
-          yield
-        ensure
-          self.class.app = old_app
-        end
+        yield
       end
     end
 
@@ -89,6 +91,13 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
     ensure
       ActionDispatch::Session::ActiveRecordStore.session_class = session_class
     end
+
+  # Patch in support for with_routing for integration tests, which was introduced in Rails 7.2
+  if !defined?(ActionDispatch::Assertions::RoutingAssertions::WithIntegrationRouting)
+    require_relative 'with_integration_routing_patch'
+
+    include WithIntegrationRoutingPatch
+  end
 end
 
 ActiveSupport::TestCase.test_order = :random

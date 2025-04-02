@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version     = ActiveRecord::SessionStore::VERSION
   s.summary     = 'An Action Dispatch session store backed by an Active Record class.'
 
-  s.required_ruby_version = '>= 2.5.0'
+  s.required_ruby_version = '>= 2.7.0'
   s.license     = 'MIT'
 
   s.author      = 'David Heinemeier Hansson'
@@ -23,9 +23,9 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = %w( README.md )
   s.rdoc_options.concat ['--main',  'README.md']
 
-  s.add_dependency('activerecord', '>= 7.0')
-  s.add_dependency('actionpack', '>= 7.0')
-  s.add_dependency('railties', '>= 7.0')
+  s.add_dependency('activerecord', '>= 7.1')
+  s.add_dependency('actionpack', '>= 7.1')
+  s.add_dependency('railties', '>= 7.1')
   s.add_dependency('rack', '>= 2.0.8', '< 4')
   s.add_dependency('cgi', '>= 0.3.6')
 end
