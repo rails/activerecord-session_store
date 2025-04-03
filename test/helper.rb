@@ -92,12 +92,14 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
       ActionDispatch::Session::ActiveRecordStore.session_class = session_class
     end
 
-  # Patch in support for with_routing for integration tests, which was introduced in Rails 7.2
-  if !defined?(ActionDispatch::Assertions::RoutingAssertions::WithIntegrationRouting)
-    require_relative 'with_integration_routing_patch'
+    # Patch in support for with_routing for integration tests, which was
+    # introduced in Rails 7.2, but improved in Rails 8.0 to better handle
+    # middleware. See: https://github.com/rails/rails/pull/54705
+    if Gem.loaded_specs["actionpack"].version <= Gem::Version.new("8.0")
+      require_relative "with_integration_routing_patch"
 
-    include WithIntegrationRoutingPatch
-  end
+      include WithIntegrationRoutingPatch
+    end
 end
 
 ActiveSupport::TestCase.test_order = :random

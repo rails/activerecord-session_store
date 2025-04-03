@@ -60,6 +60,11 @@ module ActionDispatch
       SESSION_RECORD_KEY = 'rack.session.record'
       ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
 
+      def initialize(app, options = {})
+        @secure_session_only = options.delete(:secure_session_only) { false }
+        super(app, options)
+      end
+
     private
       def get_session(request, sid)
         logger.silence do
@@ -136,7 +141,7 @@ module ActionDispatch
         if sid && !self.class.private_session_id?(sid.public_id)
           if (secure_session = session_class.find_by_session_id(sid.private_id))
             secure_session
-          elsif (insecure_session = session_class.find_by_session_id(sid.public_id))
+          elsif !@secure_session_only && (insecure_session = session_class.find_by_session_id(sid.public_id))
             insecure_session.session_id = sid.private_id # this causes the session to be secured
             insecure_session
           end
