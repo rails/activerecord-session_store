@@ -22,19 +22,19 @@ module ActiveRecord
           @data_column_size_limit ||= columns_hash[data_column_name].limit
         end
 
-        # Hook to set up sessid compatibility.
-        def find_by_session_id(session_id)
-          SEMAPHORE.synchronize { setup_sessid_compatibility! }
-          find_by_session_id(session_id)
-        end
-
-        private
-          def session_id_column
-            'session_id'
+        if SessionStore.disable_sessid_fallback
+          def find_by_session_id(session_id)
+            where(session_id: session_id).first
+          end
+        else
+          # Hook to set up sessid compatibility.
+          def find_by_session_id(session_id)
+            SEMAPHORE.synchronize { setup_sessid_compatibility! }
+            find_by_session_id(session_id)
           end
 
           # Compatibility with tables using sessid instead of session_id.
-          def setup_sessid_compatibility!
+          private def setup_sessid_compatibility!
             # Reset column info since it may be stale.
             reset_column_information
             if columns_hash['sessid']
@@ -51,6 +51,12 @@ module ActiveRecord
                 where(session_id: session_id).first
               end
             end
+          end
+        end
+
+        private
+          def session_id_column
+            'session_id'
           end
       end
 

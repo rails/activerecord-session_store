@@ -108,6 +108,36 @@ module ActiveRecord
         Session.reset_column_information
       end
 
+      def test_find_by_sess_id_compat_disabled
+        old_fallback = ActiveRecord::SessionStore.disable_sessid_fallback
+        ActiveRecord::SessionStore.disable_sessid_fallback = true
+
+        # Force class reload, as we need to redo the meta-programming
+        ActiveRecord::SessionStore.send(:remove_const, :Session)
+        load 'active_record/session_store/session.rb'
+
+        Session.reset_column_information
+        klass = Class.new(Session) do
+          def self.session_id_column
+            'sessid'
+          end
+        end
+        klass.create_table!
+
+        assert klass.columns_hash['sessid'], 'sessid column exists'
+        session = klass.new(:data => 'hello')
+        session.sessid = "100"
+        session.save!
+
+        assert_raises(ActiveRecord::StatementInvalid) do
+          klass.find_by_session_id("100")
+        end
+      ensure
+        klass.drop_table!
+        Session.reset_column_information
+        ActiveRecord::SessionStore.disable_sessid_fallback = old_fallback
+      end
+
       def test_find_by_session_id
         Session.create_table!
         session_id = "10"

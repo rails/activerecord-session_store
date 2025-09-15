@@ -8,6 +8,9 @@ module ActiveRecord
   module SessionStore
     autoload :Session, 'active_record/session_store/session'
 
+    @disable_sessid_fallback = false
+    singleton_class.attr_accessor :disable_sessid_fallback
+
     module ClassMethods # :nodoc:
       mattr_accessor :serializer
 
