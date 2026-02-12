@@ -7,6 +7,8 @@ require 'minitest/autorun'
 
 require 'active_record/session_store'
 
+ActiveRecord::SessionStore.deprecator.behavior = :raise
+
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:')
 
 SharedTestRoutes = ActionDispatch::Routing::RouteSet.new

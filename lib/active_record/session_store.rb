@@ -1,12 +1,19 @@
 require 'active_record'
 require 'active_record/session_store/version'
 require 'action_dispatch/session/active_record_store'
+require 'active_support'
 require 'active_support/core_ext/hash/keys'
 require 'json'
 
 module ActiveRecord
   module SessionStore
     autoload :Session, 'active_record/session_store/session'
+
+    class << self
+      def deprecator
+        @deprecator ||= ActiveSupport::Deprecation.new("3.0", "ActiveRecord::SessionStore")
+      end
+    end
 
     module ClassMethods # :nodoc:
       mattr_accessor :serializer

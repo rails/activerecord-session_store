@@ -38,6 +38,10 @@ module ActiveRecord
             # Reset column info since it may be stale.
             reset_column_information
             if columns_hash['sessid']
+              SessionStore.deprecator.warn <<~MSG
+                Using a session ID column other than `session_id` is deprecated without replacement. You should migrate your session table to use `session_id`.
+              MSG
+
               def self.find_by_session_id(session_id)
                 find_by_sessid(session_id)
               end
