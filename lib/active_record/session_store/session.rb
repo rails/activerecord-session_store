@@ -22,39 +22,13 @@ module ActiveRecord
           @data_column_size_limit ||= columns_hash[data_column_name].limit
         end
 
-        # Hook to set up sessid compatibility.
         def find_by_session_id(session_id)
-          SEMAPHORE.synchronize { setup_sessid_compatibility! }
-          find_by_session_id(session_id)
+          where(session_id: session_id).first
         end
 
         private
           def session_id_column
             'session_id'
-          end
-
-          # Compatibility with tables using sessid instead of session_id.
-          def setup_sessid_compatibility!
-            # Reset column info since it may be stale.
-            reset_column_information
-            if columns_hash['sessid']
-              SessionStore.deprecator.warn <<~MSG
-                Using a session ID column other than `session_id` is deprecated without replacement. You should migrate your session table to use `session_id`.
-              MSG
-
-              def self.find_by_session_id(session_id)
-                find_by_sessid(session_id)
-              end
-
-              define_method(:session_id)  { sessid }
-              define_method(:session_id=) { |session_id| self.sessid = session_id }
-            else
-              class << self; remove_possible_method :find_by_session_id; end
-
-              def self.find_by_session_id(session_id)
-                where(session_id: session_id).first
-              end
-            end
           end
       end
 
@@ -82,17 +56,13 @@ module ActiveRecord
       # on all existing sessions in the database. Users will not lose their session
       # when this is done.
       def secure!
-        session_id_column = if self.class.columns_hash['sessid']
-          :sessid
-        else
-          :session_id
-        end
-        raw_session_id = read_attribute(session_id_column)
+        raw_session_id = self.session_id
+
         if ActionDispatch::Session::ActiveRecordStore.private_session_id?(raw_session_id)
           # is already private, nothing to do
         else
           session_id_object = Rack::Session::SessionId.new(raw_session_id)
-          update_column(session_id_column, session_id_object.private_id)
+          update_column(:session_id, session_id_object.private_id)
         end
       end
 
