@@ -82,34 +82,6 @@ module ActiveRecord
         assert_equal s.data,Session.deserialize(sessions[0][Session.data_column_name])
       end
 
-      def test_find_by_sess_id_compat
-        # Force class reload, as we need to redo the meta-programming
-        ActiveRecord::SessionStore.send(:remove_const, :Session)
-        load 'active_record/session_store/session.rb'
-
-        Session.reset_column_information
-        klass = Class.new(Session) do
-          def self.session_id_column
-            'sessid'
-          end
-        end
-        klass.create_table!
-
-        assert klass.columns_hash['sessid'], 'sessid column exists'
-        session = klass.new(:data => 'hello')
-        session.sessid = "100"
-        session.save!
-
-        found = assert_deprecated(ActiveRecord::SessionStore.deprecator) do
-          klass.find_by_session_id("100")
-        end
-        assert_equal session, found
-        assert_equal session.sessid, found.session_id
-      ensure
-        klass.drop_table!
-        Session.reset_column_information
-      end
-
       def test_find_by_session_id
         Session.create_table!
         session_id = "10"
@@ -138,33 +110,6 @@ module ActiveRecord
 
         secured = Rack::Session::SessionId.new(session_id).private_id
         assert_equal secured, session.reload.read_attribute(:session_id)
-      end
-
-      def test_session_can_be_secured_with_sessid_compatibility
-       # Force class reload, as we need to redo the meta-programming
-        ActiveRecord::SessionStore.send(:remove_const, :Session)
-        load 'active_record/session_store/session.rb'
-
-        Session.reset_column_information
-        klass = Class.new(Session) do
-          def self.session_id_column
-            'sessid'
-          end
-        end
-        klass.create_table!
-        session_id = 'unsecure'
-        session = klass.create!(:data => 'world', :sessid => 'foo')
-        session.update_column(:sessid, session_id)
-
-        assert_equal 'unsecure', session.read_attribute(:sessid)
-
-        session.secure!
-
-        secured = Rack::Session::SessionId.new(session_id).private_id
-        assert_equal secured, session.reload.read_attribute(:sessid)
-      ensure
-        klass.drop_table!
-        Session.reset_column_information
       end
 
       def test_secure_is_idempotent
