@@ -100,7 +100,9 @@ module ActiveRecord
         session.sessid = "100"
         session.save!
 
-        found = klass.find_by_session_id("100")
+        found = assert_deprecated(ActiveRecord::SessionStore.deprecator) do
+          klass.find_by_session_id("100")
+        end
         assert_equal session, found
         assert_equal session.sessid, found.session_id
       ensure
