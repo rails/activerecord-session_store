@@ -15,8 +15,9 @@ namespace 'db:sessions' do
   task :trim => [:environment, 'db:load_config'] do
     cutoff_period = (ENV['SESSION_DAYS_TRIM_THRESHOLD'] || 30).to_i.days.ago
     ActiveRecord::SessionStore::Session.
-      where("updated_at < ?", cutoff_period).
-      delete_all
+      where("updated_at < ?", cutoff_period).or(
+        ActiveRecord::SessionStore::Session.where("created_at < ?", cutoff_period)
+      ).delete_all
   end
 
   desc "Upgrade current sessions in the database to the secure version"
