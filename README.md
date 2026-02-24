@@ -143,6 +143,10 @@ $ rake db:sessions:upgrade
 This rake task is idempotent and can be run multiple times, and session data of
 users will remain intact.
 
+If you are using a custom class for storing your sessions (as described earlier
+in `Configuration`), you need to copy and adapt this task or add a migration
+containing equivalent code.
+
 Please see [#151] for more details.
 
 [#151]: https://github.com/rails/activerecord-session_store/pull/151
