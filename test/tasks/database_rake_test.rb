@@ -63,6 +63,14 @@ module ActiveRecord
         assert Session.find_by_session_id(Rack::Session::SessionId.new("original_session_id").private_id)
         assert Session.find_by_session_id("2::secure_session_id")
       end
+
+      def test_clear_task
+        Session.create!(data: "obsolete")
+
+        Rake.application.invoke_task 'db:sessions:clear'
+
+        assert_equal 0, Session.count
+      end
     end
   end
 end
