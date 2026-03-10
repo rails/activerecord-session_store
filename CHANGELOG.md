@@ -1,5 +1,7 @@
 ## Unreleased
 
+## 2.2.1
+
 * Deprecate support for `sessions.sessid` column. In 3.0, only
   `sessions.session_id` will be supported.
 * Add `secure_session_only` configuration to disable accepting insecure
