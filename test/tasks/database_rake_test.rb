@@ -23,6 +23,7 @@ module ActiveRecord
         Session.reset_column_information
 
         Rake.application.rake_require "tasks/database"
+        Rake::Task.tasks.each(&:reenable)
         Rake::Task.define_task(:environment)
         Rake::Task.define_task("db:load_config")
       end

@@ -21,6 +21,20 @@ namespace 'db:sessions' do
 
   desc "Upgrade current sessions in the database to the secure version"
   task :upgrade => [:environment, 'db:load_config'] do
-    ActionDispatch::Session::ActiveRecordStore.session_class.find_each(&:secure!)
+    logger.silence do
+      ActionDispatch::Session::ActiveRecordStore.session_class.find_each(&:secure!)
+    end
+  end
+
+  private
+
+  module NilLogger
+    def self.silence
+      yield
+    end
+  end
+
+  def logger
+    ActiveRecord::Base.logger || NilLogger
   end
 end
