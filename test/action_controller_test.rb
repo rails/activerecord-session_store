@@ -239,6 +239,22 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  def test_incorrectly_encoded_session_id_via_cookie_should_be_ignored
+    with_test_route_set do
+      open_session do |sess|
+        incorrectly_encoded_id = "\xAA\xAA".force_encoding('UTF-8')
+        sess.cookies['_session_id'] = incorrectly_encoded_id
+        sess.get '/set_session_value'
+        new_session_id = sess.cookies['_session_id']
+        assert_not_equal incorrectly_encoded_id, new_session_id
+
+        sess.get '/get_session_value'
+        new_session_id_2 = sess.cookies['_session_id']
+        assert_equal new_session_id, new_session_id_2
+      end
+    end
+  end
+
   def test_incoming_invalid_session_id_via_parameter_should_be_ignored
     session_options(cookie_only: false)
 
