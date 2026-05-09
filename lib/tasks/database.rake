@@ -8,13 +8,18 @@ namespace 'db:sessions' do
 
   desc "Clear the sessions table"
   task :clear => [:environment, 'db:load_config'] do
-    ActiveRecord::Base.connection.execute "TRUNCATE TABLE #{ActiveRecord::SessionStore::Session.table_name}"
+    if ActiveRecord::Base.connection.respond_to?(:truncate)
+      # Rails 6+
+      ActiveRecord::Base.connection.truncate(ActionDispatch::Session::ActiveRecordStore.session_class.table_name)
+    else
+      ActiveRecord::Base.connection.execute "TRUNCATE TABLE #{ActiveRecord::SessionStore::Session.table_name}"
+    end
   end
 
   desc "Trim old sessions from the table (default: > 30 days)"
   task :trim => [:environment, 'db:load_config'] do
     cutoff_period = (ENV['SESSION_DAYS_TRIM_THRESHOLD'] || 30).to_i.days.ago
-    ActiveRecord::SessionStore::Session.
+    ActionDispatch::Session::ActiveRecordStore.session_class.
       where("updated_at < ?", cutoff_period).
       delete_all
   end
