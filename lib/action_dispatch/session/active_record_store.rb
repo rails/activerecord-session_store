@@ -86,6 +86,7 @@ module ActionDispatch
         logger.silence do
           record, sid = get_session_model(request, sid)
           record.data = session_data
+          return sid unless record.changed? || record.new_record?
           return false unless record.save
 
           session_data = record.data

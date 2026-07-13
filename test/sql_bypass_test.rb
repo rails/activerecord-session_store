@@ -28,6 +28,23 @@ module ActiveRecord
         assert !s.persisted?, 'this is a new record!'
       end
 
+      def test_changed?
+        SqlBypass.create_table! unless Session.table_exists?
+        session_id = 20
+        s = SqlBypass.new :data => 'hello', :session_id => session_id
+        s.save
+        t = SqlBypass.find_by_session_id session_id
+        assert !t.changed?, 'this session is unchanged!'
+        t.data = 'hello'
+        assert !t.changed?, 'this session is unchanged!'
+        t.data = 'world'
+        assert t.changed?, 'this session has changed!'
+        t.save
+        t = SqlBypass.find_by_session_id session_id
+        t.session_id = 30
+        assert t.changed?, 'this session has changed!'
+      end
+
       def test_not_loaded?
         s = SqlBypass.new({})
         assert !s.loaded?, 'it is not loaded'
