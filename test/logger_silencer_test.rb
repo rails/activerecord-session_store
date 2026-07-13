@@ -19,6 +19,9 @@ class LoggerSilencerTest < ActionDispatch::IntegrationTest
     session_class.drop_table! rescue nil
     session_class.create_table!
     ActionDispatch::Session::ActiveRecordStore.session_class = session_class
+
+    ActiveRecord::SessionStore::Session.sign_cookie = false
+    ActiveRecord::SessionStore::Session.encrypt_cookie = false
   end
 
   %w{ session sql_bypass }.each do |class_name|
