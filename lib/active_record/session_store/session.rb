@@ -65,7 +65,9 @@ module ActiveRecord
           # is already private, nothing to do
         else
           session_id_object = Rack::Session::SessionId.new(raw_session_id)
-          update_column(:session_id, session_id_object.private_id)
+          logger.silence do
+            update_column(:session_id, session_id_object.private_id)
+          end
         end
       end
 
@@ -88,6 +90,16 @@ module ActiveRecord
           if limit and read_attribute(@@data_column_name).size > limit
             raise ActionController::SessionOverflowError
           end
+        end
+
+        module NilLogger
+          def self.silence
+            yield
+          end
+        end
+
+        def logger
+          ActiveRecord::Base.logger || NilLogger
         end
     end
   end
