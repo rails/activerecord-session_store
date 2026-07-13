@@ -9,12 +9,6 @@ module ActiveRecord
   module SessionStore
     autoload :Session, 'active_record/session_store/session'
 
-    class << self
-      def deprecator
-        @deprecator ||= ActiveSupport::Deprecation.new("3.0", "ActiveRecord::SessionStore")
-      end
-    end
-
     module ClassMethods # :nodoc:
       mattr_accessor :serializer
 
