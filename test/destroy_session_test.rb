@@ -2,6 +2,12 @@ if ActiveRecord::VERSION::MAJOR > 4
 
   require 'action_dispatch/middleware/session/abstract_store'
 
+  # Rails main (after https://github.com/rails/rails/commit/7105d5af0e3d2f9420bdae84cac7beb9aedbc945)
+  # moved ActionDispatch::Request::Session to ActionDispatch::Http::Session.
+  # Support both namespaces so the tests run against every supported Rails version.
+  # Remove this constant alias when support from Rails 8.1 is dropped.
+  HttpSession = defined?(ActionDispatch::Http::Session) ? ActionDispatch::Http::Session : ActionDispatch::Request::Session
+
   module ActionDispatch
     class Request
       class DestroySessionTest < ActiveSupport::TestCase
@@ -18,7 +24,7 @@ if ActiveRecord::VERSION::MAJOR > 4
         end
 
         def test_destroy_without_renew
-          s = Session.create(store, req, { :renew => false })
+          s = HttpSession.create(store, req, { :renew => false })
           s['set_something_so_it_loads'] = true
 
           session_model = req.env[record_key]
@@ -31,7 +37,7 @@ if ActiveRecord::VERSION::MAJOR > 4
         end
 
         def test_destroy_with_renew
-          s = Session.create(store, req, { :renew => true })
+          s = HttpSession.create(store, req, { :renew => true })
           s['set_something_so_it_loads'] = true
 
           session_model = req.env[record_key]
