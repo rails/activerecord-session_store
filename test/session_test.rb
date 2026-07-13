@@ -126,6 +126,17 @@ module ActiveRecord
         assert !s.loaded?, 'session is not loaded'
       end
 
+      def test_data_changes_are_tracked
+        Session.create_table!
+        session_klass.create!(:data => 'world', :session_id => '10')
+        t = session_klass.find_by_session_id('10')
+        assert !t.changed?, 'this session is unchanged!'
+        t.data = 'world'
+        assert !t.changed?, 'this session is unchanged!'
+        t.data = 'hello'
+        assert t.changed?, 'this session has changed!'
+      end
+
       def test_session_can_be_secured
         Session.create_table!
         session_id = 'unsecure'

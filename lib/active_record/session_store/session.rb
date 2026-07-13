@@ -68,7 +68,10 @@ module ActiveRecord
         @data ||= self.class.deserialize(read_attribute(@@data_column_name)) || {}
       end
 
-      attr_writer :data
+      def data=(data)
+        attribute_will_change!(@@data_column_name) if data != self.data
+        @data = data
+      end
 
       # Has the session been loaded yet?
       def loaded?

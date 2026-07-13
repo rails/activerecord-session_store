@@ -72,8 +72,6 @@ module ActiveRecord
       attr_accessor :session_id
       alias :new_record? :new_record
 
-      attr_writer :data
-
       # Look for normal and serialized data, self.find_by_session_id's way of
       # telling us to postpone deserializing until the data is requested.
       # We need to handle a normal data attribute in case of a new record.
@@ -83,6 +81,7 @@ module ActiveRecord
         @data           = attributes[:data]
         @serialized_data = attributes[:serialized_data]
         @new_record     = @serialized_data.nil?
+        @data_changed    = false
       end
 
       # Returns true if the record is persisted, i.e. it's not a new record
@@ -106,6 +105,15 @@ module ActiveRecord
         @data
       end
 
+      def data=(data)
+        @data_changed = true if data != self.data
+        @data = data
+      end
+
+      def changed?
+        persisted? && (@retrieved_by != session_id || @data_changed)
+      end
+
       def save
         return false unless loaded?
         serialized_data = self.class.serialize(data)
@@ -113,7 +121,7 @@ module ActiveRecord
 
         if @new_record
           @new_record = false
-          connect.update <<-end_sql, 'Create session'
+          result = connect.update <<-end_sql, 'Create session'
             INSERT INTO #{table_name} (
               #{connect.quote_column_name(session_id_column)},
               #{connect.quote_column_name(data_column)} )
@@ -122,7 +130,7 @@ module ActiveRecord
               #{connect.quote(serialized_data)} )
           end_sql
         else
-          connect.update <<-end_sql, 'Update session'
+          result = connect.update <<-end_sql, 'Update session'
             UPDATE #{table_name}
             SET
               #{connect.quote_column_name(data_column)}=#{connect.quote(serialized_data)},
@@ -130,6 +138,10 @@ module ActiveRecord
             WHERE #{connect.quote_column_name(session_id_column)}=#{connect.quote(@retrieved_by)}
           end_sql
         end
+
+        @retrieved_by = @session_id
+        @data_changed = false
+        result
       end
 
       def destroy

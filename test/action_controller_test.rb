@@ -1,6 +1,21 @@
 require 'helper'
 
 class ActionControllerTest < ActionDispatch::IntegrationTest
+  class SessionWithSaveCounter < ActiveRecord::SessionStore::Session
+    self.table_name = "sessions"
+
+    class << self
+      attr_accessor :save_calls
+    end
+
+    self.save_calls = 0
+
+    def save(*)
+      self.class.save_calls += 1
+      super
+    end
+  end
+
   class SqlBypassWithFindCounter < ActiveRecord::SessionStore::SqlBypass
     self.table_name = "sessions"
 
@@ -212,6 +227,25 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       get '/get_session_value'
       assert_response :success
       assert_nil headers['Set-Cookie'], "should not resend the cookie again if session_id cookie is already exists"
+    end
+  end
+
+  def test_doesnt_persist_unchanged_session
+    with_session_class SessionWithSaveCounter do
+      with_test_route_set do
+        public_session_id = 'public-session-id'
+        private_session_id = Rack::Session::SessionId.new(public_session_id).private_id
+        SessionWithSaveCounter.create!(:session_id => private_session_id, :data => { 'foo' => 'bar' })
+        cookies['_session_id'] = public_session_id
+
+        SessionWithSaveCounter.save_calls = 0
+
+        get '/get_session_value'
+        assert_response :success
+        assert_equal 'foo: "bar"', response.body
+
+        assert_equal 0, SessionWithSaveCounter.save_calls
+      end
     end
   end
 
