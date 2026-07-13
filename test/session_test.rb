@@ -120,6 +120,19 @@ module ActiveRecord
         Session.drop_table!
       end
 
+      def test_find_by_session_id_does_not_order
+        Session.create_table!
+        session_klass.create!(:data => 'world', :session_id => '10')
+
+        sql = capture_sql do
+          session_klass.find_by_session_id('10')
+        end
+
+        session_selects = sql.grep(/SELECT .* FROM ["`]?#{Session.table_name}["`]?/i)
+        assert_not_empty session_selects
+        assert session_selects.none? { |query| query.match?(/ORDER BY/i) }, session_selects.join("\n")
+      end
+
       def test_loaded?
         Session.create_table!
         s = Session.new
@@ -194,6 +207,18 @@ module ActiveRecord
 
         assert_equal private_id, session.reload.read_attribute(:session_id)
       end
+
+      private
+        def capture_sql
+          sql = []
+          subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+            sql << payload[:sql] unless payload[:name] == "SCHEMA"
+          end
+          yield
+          sql
+        ensure
+          ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
+        end
     end
   end
 end
