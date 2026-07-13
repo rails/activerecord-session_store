@@ -102,6 +102,13 @@ You must implement these methods:
 * `save`
 * `destroy`
 
+Note that some of the provided [rake tasks](https://github.com/rails/activerecord-session_store/blob/master/lib/tasks/database.rake)
+require additional methods to be implemented:
+
+* `db:sessions:clear` depends on `table_name`
+* `db:sessions:trim` depends on `where` and `delete_all`
+* `db:sessions:upgrade` depends on `secure!`
+
 The example SqlBypass class is a generic SQL session store. You may
 use it as a basis for high-performance database-specific stores.
 
@@ -142,10 +149,6 @@ $ rake db:sessions:upgrade
 
 This rake task is idempotent and can be run multiple times, and session data of
 users will remain intact.
-
-If you are using a custom class for storing your sessions (as described earlier
-in `Configuration`), you need to copy and adapt this task or add a migration
-containing equivalent code.
 
 Please see [#151] for more details.
 
