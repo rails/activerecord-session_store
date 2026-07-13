@@ -333,7 +333,7 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
   def test_incorrectly_encoded_session_id_via_cookie_should_be_ignored
     with_test_route_set do
       open_session do |sess|
-        incorrectly_encoded_id = "\xAA\xAA".force_encoding('UTF-8')
+        incorrectly_encoded_id = "\xAA\xAA".dup.force_encoding('UTF-8')
         sess.cookies['_session_id'] = incorrectly_encoded_id
         sess.get '/set_session_value'
         new_session_id = sess.cookies['_session_id']
