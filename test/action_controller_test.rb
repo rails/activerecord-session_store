@@ -1,6 +1,21 @@
 require 'helper'
 
 class ActionControllerTest < ActionDispatch::IntegrationTest
+  class SqlBypassWithFindCounter < ActiveRecord::SessionStore::SqlBypass
+    self.table_name = "sessions"
+
+    class << self
+      attr_accessor :find_by_session_id_calls
+
+      def find_by_session_id(session_id)
+        self.find_by_session_id_calls += 1
+        super
+      end
+    end
+
+    self.find_by_session_id_calls = 0
+  end
+
   class TestController < ActionController::Base
     protect_from_forgery
     def no_session_access
@@ -197,6 +212,23 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       get '/get_session_value'
       assert_response :success
       assert_nil headers['Set-Cookie'], "should not resend the cookie again if session_id cookie is already exists"
+    end
+  end
+
+  def test_reuses_loaded_session_record_from_env_when_writing_session
+    with_session_class SqlBypassWithFindCounter do
+      with_test_route_set do
+        get '/set_session_value'
+        assert_response :success
+        assert cookies['_session_id']
+
+        SqlBypassWithFindCounter.find_by_session_id_calls = 0
+
+        get '/set_session_value', :params => { :foo => "baz" }
+        assert_response :success
+
+        assert_equal 1, SqlBypassWithFindCounter.find_by_session_id_calls
+      end
     end
   end
 
