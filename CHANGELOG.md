@@ -1,11 +1,1 @@
-## Unreleased
-
-* Deprecate support for `sessions.sessid` column. In 3.0, only
-  `sessions.session_id` will be supported.
-* Add `secure_session_only` configuration to disable accepting insecure
-  sessions.
-* Drop Rails 7.0 support.
-
-## 2.2.0
-
-* Drop dependency on `multi_json`.
+See https://github.com/rails/activerecord-session_store/releases for more information on the releases.
