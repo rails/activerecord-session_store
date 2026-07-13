@@ -1,5 +1,5 @@
 require "active_support/core_ext/module/attribute_accessors"
-require 'action_dispatch/middleware/session/abstract_store'
+require "action_dispatch/middleware/session/abstract_store"
 
 module ActionDispatch
   module Session
@@ -57,12 +57,14 @@ module ActionDispatch
       # ActiveRecord::SessionStore::Session
       class_attribute :session_class
 
-      SESSION_RECORD_KEY = 'rack.session.record'
+      DEFAULT_SAME_SITE = proc { |request| request.cookies_same_site_protection } # :nodoc:
       ENV_SESSION_OPTIONS_KEY = Rack::RACK_SESSION_OPTIONS
+      SESSION_RECORD_KEY = "rack.session.record"
 
       def initialize(app, options = {})
         @secure_session_only = options.delete(:secure_session_only) { false }
-        super(app, options)
+        options[:same_site] = DEFAULT_SAME_SITE unless options.key?(:same_site)
+        super
       end
 
     private
@@ -167,7 +169,6 @@ module ActionDispatch
         # user tried to retrieve a session by a private key?
         session_id =~ /\A\d+::/
       end
-
     end
   end
 end
