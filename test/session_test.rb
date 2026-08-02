@@ -111,6 +111,17 @@ module ActiveRecord
         assert !s.loaded?, 'session is not loaded'
       end
 
+      def test_in_place_mutation_is_tracked
+        Session.create_table!
+        session_klass.create!(:data => {"key" => ["a"]}, :session_id => '42')
+        t = session_klass.find_by_session_id('42')
+        assert !t.changed?, 'freshly loaded session is unchanged'
+        data = t.data
+        data["key"] << "b"
+        t.data = data
+        assert t.changed?, 'in-place mutation must be detected as a change'
+      end
+
       def test_data_changes_are_tracked
         Session.create_table!
         session_klass.create!(:data => 'world', :session_id => '10')

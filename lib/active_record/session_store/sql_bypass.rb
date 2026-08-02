@@ -94,6 +94,7 @@ module ActiveRecord
         unless @data
           if @serialized_data
             @data, @serialized_data = self.class.deserialize(@serialized_data) || {}, nil
+            @data_snapshot = Marshal.load(Marshal.dump(@data))
           else
             @data = {}
           end
@@ -106,7 +107,8 @@ module ActiveRecord
       end
 
       def data=(data)
-        @data_changed = true if data != self.data
+        original = @data_snapshot || self.data
+        @data_changed = true if data != original
         @data = data
       end
 
