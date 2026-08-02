@@ -39,11 +39,16 @@ module ActiveRecord
 
       # Lazy-deserialize session state.
       def data
-        @data ||= self.class.deserialize(read_attribute(@@data_column_name)) || {}
+        unless @data
+          @data = self.class.deserialize(read_attribute(@@data_column_name)) || {}
+          @data_snapshot = Marshal.load(Marshal.dump(@data))
+        end
+        @data
       end
 
       def data=(data)
-        attribute_will_change!(@@data_column_name) if data != self.data
+        original = @data_snapshot || self.data
+        attribute_will_change!(@@data_column_name) if data != original
         @data = data
       end
 

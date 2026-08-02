@@ -28,6 +28,18 @@ module ActiveRecord
         assert !s.persisted?, 'this is a new record!'
       end
 
+      def test_in_place_mutation_is_tracked
+        SqlBypass.create_table! unless Session.table_exists?
+        s = SqlBypass.new :data => {"key" => ["a"]}, :session_id => 50
+        s.save
+        t = SqlBypass.find_by_session_id 50
+        assert !t.changed?, 'freshly loaded session is unchanged'
+        data = t.data
+        data["key"] << "b"
+        t.data = data
+        assert t.changed?, 'in-place mutation must be detected as a change'
+      end
+
       def test_changed?
         SqlBypass.create_table! unless Session.table_exists?
         session_id = 20
