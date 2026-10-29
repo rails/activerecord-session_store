@@ -83,7 +83,7 @@ class ActionDispatch::IntegrationTest < ActiveSupport::TestCase
 
     def with_test_route_set
       controller_namespace = self.class.to_s.underscore
-      actions = %w[set_session_value get_session_value call_reset_session renew get_session_id]
+      actions = %w[set_session_value get_session_value call_reset_session renew get_session_id log_in get_user_id in_flight_request_during_logout]
 
       with_routing do |set|
         set.draw do

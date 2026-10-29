@@ -63,6 +63,28 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
       request.env["rack.session.options"][:renew] = true
       head :ok
     end
+
+    def log_in
+      session[:user_id] = "logged_in_user"
+      head :ok
+    end
+
+    def get_user_id
+      render :plain => "user_id: #{session[:user_id].inspect}"
+    end
+
+    # Simulates a slow request (e.g. a page load or API call) that is still in
+    # flight when a concurrent logout request calls reset_session, destroying
+    # the session record. This request has already loaded the session,
+    # including user_id, before the logout happens. If the store then wrote
+    # this request's stale copy of the session back to the database, the
+    # user would be logged back in, undoing the logout.
+    def in_flight_request_during_logout
+      session[:user_id] # load the session before the concurrent logout
+      ActiveRecord::SessionStore::Session.delete_all # the concurrent logout
+      session[:last_page] = params[:last_page] if params[:last_page]
+      head :ok
+    end
   end
 
   def setup
@@ -93,6 +115,58 @@ class ActionControllerTest < ActionDispatch::IntegrationTest
           get '/call_reset_session'
           assert_response :success
           assert_not_equal [], headers['Set-Cookie']
+        end
+      end
+    end
+
+    # Guards against a vulnerability in versions before 2.3.0 that undid
+    # logouts. See in_flight_request_during_logout above.
+    define_method("test_logout_during_in_flight_request_does_not_restore_user_id_with_#{class_name}_store") do
+      with_store class_name do
+        with_test_route_set do
+          get '/log_in'
+          assert_response :success
+          logged_in_session_id = cookies['_session_id']
+          assert logged_in_session_id
+
+          get '/get_user_id'
+          assert_response :success
+          assert_equal 'user_id: "logged_in_user"', response.body
+
+          get '/in_flight_request_during_logout'
+          assert_response :success
+          assert_equal 0, ActiveRecord::SessionStore::Session.count, "should not recreate the logged-out session"
+          assert_equal logged_in_session_id, cookies['_session_id'], "should not issue a new session id for the logged-out session"
+
+          get '/get_user_id'
+          assert_response :success
+          assert_equal 'user_id: nil', response.body, "should not restore user_id after logout"
+        end
+      end
+    end
+
+    # As above, but the in-flight request also modifies the session, so the
+    # store has changes it wants to save when the request finishes.
+    define_method("test_logout_during_in_flight_request_that_modifies_session_does_not_restore_user_id_with_#{class_name}_store") do
+      with_store class_name do
+        with_test_route_set do
+          get '/log_in'
+          assert_response :success
+          logged_in_session_id = cookies['_session_id']
+          assert logged_in_session_id
+
+          get '/get_user_id'
+          assert_response :success
+          assert_equal 'user_id: "logged_in_user"', response.body
+
+          get '/in_flight_request_during_logout', :params => { :last_page => "/dashboard" }
+          assert_response :success
+          assert_equal 0, ActiveRecord::SessionStore::Session.count, "should not recreate the logged-out session"
+          assert_equal logged_in_session_id, cookies['_session_id'], "should not issue a new session id for the logged-out session"
+
+          get '/get_user_id'
+          assert_response :success
+          assert_equal 'user_id: nil', response.body, "should not restore user_id after logout"
         end
       end
     end
